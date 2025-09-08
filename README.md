@@ -1,4 +1,4 @@
-# Terraform AWS OpenTelemetry Collector Module
+# Monte Carlo AWS OpenTelemetry Collector Module
 
 A Terraform module that deploys Monte Carlo's OpenTelemetry Collector Service on AWS ECS Fargate.
 
