@@ -1,6 +1,6 @@
 terraform {
   required_version = ">= 1.0"
-  
+
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -24,6 +24,6 @@ module "otel_collector" {
 
   # Optional customizations
   task_desired_count = var.task_desired_count
-  task_cpu          = var.task_cpu
-  task_memory       = var.task_memory
+  task_cpu           = var.task_cpu
+  task_memory        = var.task_memory
 }
