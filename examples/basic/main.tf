@@ -16,10 +16,11 @@ provider "aws" {
 module "otel_collector" {
   source = "../../"
 
-  deployment_name           = var.deployment_name
-  existing_vpc_id           = var.existing_vpc_id
-  existing_subnet_ids       = var.existing_subnet_ids
-  telemetry_data_bucket_arn = var.telemetry_data_bucket_arn
+  deployment_name            = var.deployment_name
+  existing_vpc_id            = var.existing_vpc_id
+  existing_subnet_ids        = var.existing_subnet_ids
+  telemetry_data_bucket_arn  = var.telemetry_data_bucket_arn
+  existing_security_group_id = var.existing_security_group_id
 
   # Optional customizations
   task_desired_count = var.task_desired_count
