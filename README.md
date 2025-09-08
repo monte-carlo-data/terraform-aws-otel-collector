@@ -136,4 +136,8 @@ After deployment, update the external access configuration:
 
 ## License
 
-Copyright 2025 Monte Carlo Data, Inc.
+See [LICENSE](LICENSE) for more information.
+
+## Security
+
+See [SECURITY](SECURITY.md) for more information.
