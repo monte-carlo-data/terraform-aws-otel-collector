@@ -134,6 +134,18 @@ After deployment, update the external access configuration:
 2. Set `external_access_principal` to the appropriate AWS account or federated identity
 3. Run `terraform apply` again to update the external access role
 
+## Releases and Development
+
+The README and basic example in the `examples/basic` directory is a good starting point to familiarize yourself with using the module.
+
+Note that all Terraform files must conform to the standards of `terraform fmt` and the [standard module structure](https://developer.hashicorp.com/terraform/language/modules/develop).
+CircleCI will sanity check formatting and for valid tf config files.
+It is also recommended you use Terraform Cloud as a backend.
+Otherwise, as normal, please follow Monte Carlo's code guidelines during development and review.
+
+When ready to release simply add a new version tag, e.g. v0.0.42, and push that tag to GitHub.
+See additional details [here](https://developer.hashicorp.com/terraform/registry/modules/publish#releasing-new-versions).
+
 ## License
 
 See [LICENSE](LICENSE) for more information.
