@@ -56,13 +56,9 @@ variable "http_port" {
     condition     = var.http_port >= 1024 && var.http_port <= 65535
     error_message = "Port must be between 1024 and 65535."
   }
-}
-
-# Validation to ensure ports are different (equivalent to CloudFormation Rules)
-check "port_validation" {
-  assert {
-    condition     = var.grpc_port != var.http_port
-    error_message = "GRPCPort and HTTPPort must be different values to avoid conflicts"
+  validation {
+    condition     = var.http_port != var.grpc_port
+    error_message = "HTTP port must be different from gRPC port to avoid conflicts."
   }
 }
 
