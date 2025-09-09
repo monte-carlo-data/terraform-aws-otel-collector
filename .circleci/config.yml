@@ -59,7 +59,7 @@ jobs:
 
   run-sanity-check:
     docker:
-      - image: docker.mirror.hashicorp.services/hashicorp/terraform:light
+      - image: hashicorp/terraform:1.13
     steps:
       - checkout
       - run:
