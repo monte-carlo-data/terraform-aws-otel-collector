@@ -13,7 +13,7 @@ This module creates:
 
 ## Prerequisites
 
-- Terraform >= 1.0
+- Terraform >= 1.9.0
 - AWS CLI configured with appropriate permissions
 - Existing VPC with at least 2 private subnets
 - S3 bucket for storing telemetry data
@@ -24,7 +24,7 @@ This module creates:
 
 ```hcl
 module "otel_collector" {
-  source = "monte-carlo-data/terraform-aws-otel-collector"
+  source = "monte-carlo-data/otel-collector/aws"
 
   deployment_name           = "my-otel-collector"
   existing_vpc_id           = "vpc-12345678"
@@ -37,7 +37,7 @@ module "otel_collector" {
 
 ```hcl
 module "otel_collector" {
-  source = "monte-carlo-data/terraform-aws-otel-collector"
+  source = "monte-carlo-data/otel-collector/aws"
 
   # Required variables
   deployment_name           = "production-otel-collector"
