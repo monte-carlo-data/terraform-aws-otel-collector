@@ -352,20 +352,26 @@ exporters:
     s3uploader:
       region: ${data.aws_region.current.name}
       s3_bucket: ${local.external_s3_bucket_name}
-      s3_prefix: mcd/otel-collector/traces
+      s3_base_prefix: mcd/otel-collector/traces
       file_prefix: traces
+    resource_attrs_to_s3:
+      s3_prefix: "service.name"
   awss3/metrics:
     s3uploader:
       region: ${data.aws_region.current.name}
       s3_bucket: ${local.external_s3_bucket_name}
-      s3_prefix: mcd/otel-collector/metrics
+      s3_base_prefix: mcd/otel-collector/metrics
       file_prefix: metrics
+      resource_attrs_to_s3:
+        s3_prefix: "service.name"
   awss3/logs:
     s3uploader:
       region: ${data.aws_region.current.name}
       s3_bucket: ${local.external_s3_bucket_name}
-      s3_prefix: mcd/otel-collector/logs
+      s3_base_prefix: mcd/otel-collector/logs
       file_prefix: logs
+    resource_attrs_to_s3:
+      s3_prefix: "service.name"
 
 service:
   pipelines:
