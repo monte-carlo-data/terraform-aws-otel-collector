@@ -362,8 +362,8 @@ exporters:
       s3_bucket: ${local.external_s3_bucket_name}
       s3_base_prefix: mcd/otel-collector/metrics
       file_prefix: metrics
-      resource_attrs_to_s3:
-        s3_prefix: "service.name"
+    resource_attrs_to_s3:
+      s3_prefix: "service.name"
   awss3/logs:
     s3uploader:
       region: ${data.aws_region.current.name}
