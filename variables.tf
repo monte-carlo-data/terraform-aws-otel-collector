@@ -162,8 +162,8 @@ variable "external_access_role_name" {
   default     = "N/A"
 }
 
-variable "deploy_redshift_lambda_udf" {
-  description = "Whether to deploy the Lambda UDF for Redshift to invoke Bedrock models"
+variable "deploy_redshift_resources" {
+  description = "Whether to deploy the Lambda UDF for Redshift to invoke Bedrock models and IAM Role for Redshift External Function"
   type        = bool
   default     = false
 }

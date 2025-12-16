@@ -27,10 +27,10 @@ output "opentelemetry_collector_security_group_id" {
 
 output "redshift_bedrock_udf_lambda_arn" {
   description = "The ARN of the Lambda function for Redshift Bedrock UDF"
-  value       = var.deploy_redshift_lambda_udf ? module.redshift_lambda_udf[0].lambda_arn : null
+  value       = var.deploy_redshift_resources ? module.redshift_lambda_udf[0].lambda_arn : null
 }
 
 output "redshift_bedrock_udf_lambda_function_name" {
   description = "The name of the Lambda function for Redshift Bedrock UDF"
-  value       = var.deploy_redshift_lambda_udf ? module.redshift_lambda_udf[0].lambda_function_name : null
+  value       = var.deploy_redshift_resources ? module.redshift_lambda_udf[0].lambda_function_name : null
 }

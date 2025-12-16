@@ -27,8 +27,8 @@ module "otel_collector" {
   task_cpu           = var.task_cpu
   task_memory        = var.task_memory
 
-  # Enable Redshift Lambda UDF
-  deploy_redshift_lambda_udf = true
+  # Enable Redshift Lambda UDF and IAM Role for Redshift External Function
+  deploy_redshift_resources = true
 
   # Optional Redshift Lambda UDF customizations
   redshift_lambda_timeout     = var.redshift_lambda_timeout != null ? var.redshift_lambda_timeout : 600
