@@ -444,6 +444,7 @@ module "redshift_resources" {
   common_tags        = local.common_tags
   lambda_timeout     = var.redshift_lambda_timeout
   lambda_memory_size = var.redshift_lambda_memory_size
+  s3_bucket_name     = local.external_s3_bucket_name
 }
 
 

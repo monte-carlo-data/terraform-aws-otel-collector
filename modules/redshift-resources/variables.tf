@@ -30,3 +30,8 @@ variable "lambda_memory_size" {
   }
 }
 
+variable "s3_bucket_name" {
+  description = "S3 bucket name for Redshift auto-copy access"
+  type        = string
+}
+

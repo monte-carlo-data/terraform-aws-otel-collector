@@ -15,3 +15,13 @@ output "lambda_execution_role_arn" {
   value       = aws_iam_role.lambda_execution_role.arn
 }
 
+output "redshift_role_arn" {
+  description = "The ARN of the IAM role for Redshift auto-copy"
+  value       = aws_iam_role.redshift_role.arn
+}
+
+output "redshift_role_name" {
+  description = "The name of the IAM role for Redshift auto-copy"
+  value       = aws_iam_role.redshift_role.name
+}
+

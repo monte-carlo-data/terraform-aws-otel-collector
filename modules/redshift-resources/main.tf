@@ -86,3 +86,50 @@ resource "aws_lambda_function" "redshift_bedrock_udf" {
   tags = var.common_tags
 }
 
+# IAM Role for Redshift
+resource "aws_iam_role" "redshift_role" {
+  name = "${var.deployment_name}-redshift-auto-copy-role"
+  path = "/"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = [
+            "redshift.amazonaws.com"
+          ]
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+
+  tags = var.common_tags
+}
+
+# IAM Policy for S3 access from Redshift
+resource "aws_iam_role_policy" "redshift_s3_policy" {
+  name = "${var.deployment_name}-redshift-auto-copy-s3-policy"
+  role = aws_iam_role.redshift_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AutoCopyReadId"
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          "arn:aws:s3:::${var.s3_bucket_name}",
+          "arn:aws:s3:::${var.s3_bucket_name}/*"
+        ]
+      }
+    ]
+  })
+}
+

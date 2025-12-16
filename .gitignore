@@ -36,4 +36,4 @@ terraform.rc
 # IDE
 .idea/
 
-modules/redshift-lambda-udf/lambda_function.zip
+modules/redshift-resources/lambda_function.zip
