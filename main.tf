@@ -440,8 +440,10 @@ module "redshift_lambda_udf" {
   source = "./modules/redshift-lambda-udf"
   count  = var.deploy_redshift_lambda_udf ? 1 : 0
 
-  deployment_name = var.deployment_name
-  common_tags     = local.common_tags
+  deployment_name    = var.deployment_name
+  common_tags        = local.common_tags
+  lambda_timeout     = var.redshift_lambda_timeout
+  lambda_memory_size = var.redshift_lambda_memory_size
 }
 
 

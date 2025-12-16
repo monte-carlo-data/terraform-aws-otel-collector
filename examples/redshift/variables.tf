@@ -49,3 +49,15 @@ variable "task_memory" {
   default     = 2048
 }
 
+variable "redshift_lambda_timeout" {
+  description = "Timeout for the Redshift Lambda UDF function in seconds (default: 600, max: 900)"
+  type        = number
+  default     = null
+}
+
+variable "redshift_lambda_memory_size" {
+  description = "Memory size for the Redshift Lambda UDF function in MB (default: 512, must be multiple of 64)"
+  type        = number
+  default     = null
+}
+

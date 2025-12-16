@@ -35,6 +35,8 @@ terraform apply
 - `task_desired_count`: (Optional) Number of tasks to run (default: 2)
 - `task_cpu`: (Optional) CPU units for each task (default: 1024)
 - `task_memory`: (Optional) Memory in MB for each task (default: 2048)
+- `redshift_lambda_timeout`: (Optional) Timeout for the Redshift Lambda UDF in seconds (default: 600, max: 900)
+- `redshift_lambda_memory_size`: (Optional) Memory size for the Redshift Lambda UDF in MB (default: 512, must be multiple of 64)
 
 ## Outputs
 

@@ -29,5 +29,9 @@ module "otel_collector" {
 
   # Enable Redshift Lambda UDF
   deploy_redshift_lambda_udf = true
+
+  # Optional Redshift Lambda UDF customizations
+  redshift_lambda_timeout     = var.redshift_lambda_timeout != null ? var.redshift_lambda_timeout : 600
+  redshift_lambda_memory_size = var.redshift_lambda_memory_size != null ? var.redshift_lambda_memory_size : 512
 }
 
