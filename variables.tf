@@ -161,3 +161,9 @@ variable "external_access_role_name" {
   type        = string
   default     = "N/A"
 }
+
+variable "deploy_redshift_lambda_udf" {
+  description = "Whether to deploy the Lambda UDF for Redshift to invoke Bedrock models"
+  type        = bool
+  default     = false
+}

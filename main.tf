@@ -435,4 +435,13 @@ resource "aws_ecs_service" "ecs_service" {
   tags = local.common_tags
 }
 
+# Redshift Lambda UDF Module
+module "redshift_lambda_udf" {
+  source = "./modules/redshift-lambda-udf"
+  count  = var.deploy_redshift_lambda_udf ? 1 : 0
+
+  deployment_name = var.deployment_name
+  common_tags     = local.common_tags
+}
+
 
