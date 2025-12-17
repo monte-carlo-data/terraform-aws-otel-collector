@@ -24,3 +24,23 @@ output "opentelemetry_collector_security_group_id" {
   description = "The ID of the security group for the OpenTelemetry Collector"
   value       = aws_security_group.security_group.id
 }
+
+output "redshift_bedrock_udf_lambda_arn" {
+  description = "The ARN of the Lambda function for Redshift Bedrock UDF"
+  value       = var.deploy_redshift_resources ? module.redshift_resources[0].lambda_arn : null
+}
+
+output "redshift_bedrock_udf_lambda_function_name" {
+  description = "The name of the Lambda function for Redshift Bedrock UDF"
+  value       = var.deploy_redshift_resources ? module.redshift_resources[0].lambda_function_name : null
+}
+
+output "redshift_role_arn" {
+  description = "The ARN of the IAM role for Redshift auto-copy"
+  value       = var.deploy_redshift_resources ? module.redshift_resources[0].redshift_role_arn : null
+}
+
+output "redshift_role_name" {
+  description = "The name of the IAM role for Redshift auto-copy"
+  value       = var.deploy_redshift_resources ? module.redshift_resources[0].redshift_role_name : null
+}

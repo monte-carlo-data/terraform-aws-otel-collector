@@ -435,4 +435,16 @@ resource "aws_ecs_service" "ecs_service" {
   tags = local.common_tags
 }
 
+# Redshift Resources Module
+module "redshift_resources" {
+  source = "./modules/redshift-resources"
+  count  = var.deploy_redshift_resources ? 1 : 0
+
+  deployment_name    = var.deployment_name
+  common_tags        = local.common_tags
+  lambda_timeout     = var.redshift_lambda_timeout
+  lambda_memory_size = var.redshift_lambda_memory_size
+  s3_bucket_name     = local.external_s3_bucket_name
+}
+
 
