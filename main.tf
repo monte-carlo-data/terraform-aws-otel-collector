@@ -442,7 +442,7 @@ module "athena_resources" {
 
   deployment_name           = var.deployment_name
   common_tags               = local.common_tags
-  sns_topic_arn             = var.athena_sns_topic_arn
+  sns_topic_arn             = var.telemetry_data_bucket_notification_sns_topic_arn
   telemetry_data_bucket_arn = var.telemetry_data_bucket_arn
 }
 

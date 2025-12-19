@@ -168,12 +168,12 @@ variable "deploy_athena_resources" {
   default     = false
 }
 
-variable "athena_sns_topic_arn" {
+variable "telemetry_data_bucket_notification_sns_topic_arn" {
   description = "ARN of the SNS topic to subscribe the SQS queue to for triggering the Glue crawler"
   type        = string
   default     = ""
   validation {
-    condition     = var.deploy_athena_resources ? var.athena_sns_topic_arn != "" : true
-    error_message = "athena_sns_topic_arn must be provided when deploy_athena_resources is true."
+    condition     = var.deploy_athena_resources ? var.telemetry_data_bucket_notification_sns_topic_arn != "" : true
+    error_message = "telemetry_data_bucket_notification_sns_topic_arn must be provided when deploy_athena_resources is true."
   }
 }
