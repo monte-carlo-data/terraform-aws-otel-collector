@@ -16,8 +16,6 @@ resource "aws_glue_classifier" "grok_classifier" {
     classification = "grok"
     grok_pattern   = local.grok_pattern
   }
-
-  tags = var.common_tags
 }
 
 # SQS Queue
@@ -120,11 +118,15 @@ resource "aws_iam_role_policy" "glue_crawler_sqs_policy" {
     Version = "2012-10-17"
     Statement = [
       {
+        Sid    = "VisualEditor0"
         Effect = "Allow"
         Action = [
-          "sqs:ReceiveMessage",
           "sqs:DeleteMessage",
-          "sqs:GetQueueAttributes"
+          "sqs:GetQueueUrl",
+          "sqs:ReceiveMessage",
+          "sqs:GetQueueAttributes",
+          "sqs:SetQueueAttributes",
+          "sqs:PurgeQueue"
         ]
         Resource = aws_sqs_queue.crawler_queue.arn
       }
@@ -157,10 +159,8 @@ resource "aws_glue_crawler" "telemetry_crawler" {
     update_behavior = "UPDATE_IN_DATABASE"
   }
 
-  table_prefix = "traces"
-
   recrawl_policy {
-    recrawl_behavior = "CRAWL_NEW_FOLDERS_ONLY"
+    recrawl_behavior = "CRAWL_EVERYTHING"
   }
 
   tags = var.common_tags
