@@ -25,22 +25,37 @@ output "opentelemetry_collector_security_group_id" {
   value       = aws_security_group.security_group.id
 }
 
-output "redshift_bedrock_udf_lambda_arn" {
-  description = "The ARN of the Lambda function for Redshift Bedrock UDF"
-  value       = var.deploy_redshift_resources ? module.redshift_resources[0].lambda_arn : null
+output "athena_glue_classifier_name" {
+  description = "The name of the Glue classifier for Athena"
+  value       = var.deploy_athena_resources ? module.athena_resources[0].glue_classifier_name : null
 }
 
-output "redshift_bedrock_udf_lambda_function_name" {
-  description = "The name of the Lambda function for Redshift Bedrock UDF"
-  value       = var.deploy_redshift_resources ? module.redshift_resources[0].lambda_function_name : null
+output "athena_sqs_queue_arn" {
+  description = "The ARN of the SQS queue for the Glue crawler"
+  value       = var.deploy_athena_resources ? module.athena_resources[0].sqs_queue_arn : null
 }
 
-output "redshift_role_arn" {
-  description = "The ARN of the IAM role for Redshift auto-copy"
-  value       = var.deploy_redshift_resources ? module.redshift_resources[0].redshift_role_arn : null
+output "athena_sqs_queue_url" {
+  description = "The URL of the SQS queue for the Glue crawler"
+  value       = var.deploy_athena_resources ? module.athena_resources[0].sqs_queue_url : null
 }
 
-output "redshift_role_name" {
-  description = "The name of the IAM role for Redshift auto-copy"
-  value       = var.deploy_redshift_resources ? module.redshift_resources[0].redshift_role_name : null
+output "athena_glue_crawler_role_arn" {
+  description = "The ARN of the IAM role for the Glue crawler"
+  value       = var.deploy_athena_resources ? module.athena_resources[0].glue_crawler_role_arn : null
+}
+
+output "athena_glue_crawler_role_name" {
+  description = "The name of the IAM role for the Glue crawler"
+  value       = var.deploy_athena_resources ? module.athena_resources[0].glue_crawler_role_name : null
+}
+
+output "athena_glue_crawler_name" {
+  description = "The name of the Glue crawler"
+  value       = var.deploy_athena_resources ? module.athena_resources[0].glue_crawler_name : null
+}
+
+output "athena_glue_database_name" {
+  description = "The name of the Glue catalog database"
+  value       = var.deploy_athena_resources ? module.athena_resources[0].glue_database_name : null
 }
