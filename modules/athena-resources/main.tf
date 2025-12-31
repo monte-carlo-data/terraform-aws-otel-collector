@@ -225,7 +225,7 @@ resource "aws_glue_crawler" "telemetry_crawler" {
     CrawlerOutput = {
       Tables = {
         AddOrUpdateBehavior = "MergeNewColumns",
-        TableThreshold: 1
+        TableThreshold      = 1
       }
     }
     Grouping = {
