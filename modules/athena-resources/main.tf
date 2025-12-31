@@ -5,7 +5,7 @@
 locals {
   grok_pattern     = "%%{GREEDYDATA:value}"
   s3_bucket_name   = split(":", var.telemetry_data_bucket_arn)[5]
-  s3_traces_path   = "s3://${local.s3_bucket_name}/mcd/otel-collector/traces"
+  s3_traces_path   = "s3://${local.s3_bucket_name}/mcd/otel-collector/traces/"
   use_existing_sns = var.sns_topic_arn != ""
   sns_topic_arn    = local.use_existing_sns ? var.sns_topic_arn : aws_sns_topic.telemetry_notifications[0].arn
 }
@@ -219,13 +219,13 @@ resource "aws_glue_crawler" "telemetry_crawler" {
     recrawl_behavior = "CRAWL_EVENT_MODE"
   }
 
-  table_prefix = "traces"
 
   configuration = jsonencode({
     Version = 1.0
     CrawlerOutput = {
       Tables = {
-        AddOrUpdateBehavior = "MergeNewColumns"
+        AddOrUpdateBehavior = "MergeNewColumns",
+        TableThreshold: 1
       }
     }
     Grouping = {
