@@ -3,9 +3,11 @@
 
 # Local values
 locals {
-  grok_pattern   = "%%{GREEDYDATA:value}"
-  s3_bucket_name = split(":", var.telemetry_data_bucket_arn)[5]
-  s3_traces_path = "s3://${local.s3_bucket_name}/mcd/otel-collector/traces"
+  grok_pattern     = "%%{GREEDYDATA:value}"
+  s3_bucket_name   = split(":", var.telemetry_data_bucket_arn)[5]
+  s3_traces_path   = "s3://${local.s3_bucket_name}/mcd/otel-collector/traces"
+  use_existing_sns = var.sns_topic_arn != ""
+  sns_topic_arn    = local.use_existing_sns ? var.sns_topic_arn : aws_sns_topic.telemetry_notifications[0].arn
 }
 
 # Glue Classifier
@@ -16,6 +18,15 @@ resource "aws_glue_classifier" "grok_classifier" {
     classification = "grok"
     grok_pattern   = local.grok_pattern
   }
+}
+
+# SNS Topic (only if not provided)
+resource "aws_sns_topic" "telemetry_notifications" {
+  count = local.use_existing_sns ? 0 : 1
+
+  name = "${var.deployment_name}-telemetry-notifications"
+
+  tags = var.common_tags
 }
 
 # SQS Queue
@@ -43,7 +54,7 @@ resource "aws_sqs_queue_policy" "crawler_queue_policy" {
         Resource = aws_sqs_queue.crawler_queue.arn
         Condition = {
           ArnEquals = {
-            "aws:SourceArn" = var.sns_topic_arn
+            "aws:SourceArn" = local.sns_topic_arn
           }
         }
       }
@@ -53,9 +64,25 @@ resource "aws_sqs_queue_policy" "crawler_queue_policy" {
 
 # SNS Topic Subscription
 resource "aws_sns_topic_subscription" "sqs_subscription" {
-  topic_arn = var.sns_topic_arn
+  topic_arn = local.sns_topic_arn
   protocol  = "sqs"
   endpoint  = aws_sqs_queue.crawler_queue.arn
+}
+
+# S3 Bucket Notification Configuration for OpenTelemetry Collector - SNS (only if SNS topic was created)
+resource "aws_s3_bucket_notification" "storage_notification_sns" {
+  count = local.use_existing_sns ? 0 : 1
+
+  bucket = local.s3_bucket_name
+
+  topic {
+    id            = "${var.deployment_name}-glue-crawler-sns-notification"
+    topic_arn     = aws_sns_topic.telemetry_notifications[0].arn
+    events        = ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+    filter_prefix = "mcd/otel-collector/"
+  }
+
+  depends_on = [aws_sns_topic.telemetry_notifications]
 }
 
 # IAM Role for Glue Crawler

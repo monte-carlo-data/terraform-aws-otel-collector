@@ -7,10 +7,12 @@ This example demonstrates the usage of the OpenTelemetry Collector Terraform mod
 When enabled, this module creates:
 
 - **AWS Glue Classifier**: A grok classifier (`%{GREEDYDATA:value}`) for parsing telemetry data
-- **Amazon SQS Queue**: Subscribes to an SNS topic to receive notifications when new data arrives
+- **Amazon SNS Topic**: (Optional) Created automatically if not provided. Receives S3 event notifications
+- **Amazon SQS Queue**: Subscribes to the SNS topic to receive notifications when new data arrives
 - **IAM Role for Glue Crawler**: Grants permissions to access S3, read from SQS, and use AWS Glue services
 - **AWS Glue Crawler**: Automatically processes new telemetry data in S3 and creates/updates tables in the Glue Data Catalog
 - **AWS Glue Database**: A catalog database for organizing telemetry tables
+- **S3 Bucket Notifications**: (Optional) Created automatically if SNS topic is not provided. Configures S3 to publish events to the SNS topic
 
 ## Architecture
 
@@ -31,31 +33,60 @@ Athena
 ## Prerequisites
 
 1. An S3 bucket for storing telemetry data
-2. An SNS topic configured to publish notifications when new objects are created in the S3 bucket
-3. S3 bucket event notifications configured to publish to the SNS topic
+2. (Optional) An existing SNS topic ARN. If not provided, the module will create one automatically along with S3 bucket notifications
 
-### Setting up S3 Event Notifications
+### SNS Topic Configuration
 
-You need to configure your S3 bucket to publish events to the SNS topic. This can be done via:
+You have two options:
 
-1. AWS Console: S3 Bucket → Properties → Event notifications
-2. AWS CLI or Terraform: Configure `aws_s3_bucket_notification` resource
+**Option 1: Let the module create everything (Recommended for simplicity)**
+- Omit the `telemetry_data_bucket_notification_sns_topic_arn` variable
+- The module will automatically:
+  - Create a new SNS topic
+  - Configure S3 bucket notifications to publish to the SNS topic
+  - Set up the SQS queue subscription
 
-Example S3 event notification configuration:
+**Option 2: Use an existing SNS topic**
+- Provide the `telemetry_data_bucket_notification_sns_topic_arn` variable
+- You must configure S3 bucket event notifications to publish to your SNS topic
+- The module will subscribe the SQS queue to your existing topic
+
+Example S3 event notification configuration (if using an existing SNS topic):
 
 ```hcl
 resource "aws_s3_bucket_notification" "telemetry_notifications" {
   bucket = "your-telemetry-bucket"
 
   topic {
-    topic_arn     = aws_sns_topic.telemetry_notifications.arn
-    events        = ["s3:ObjectCreated:*"]
-    filter_prefix = "mcd/otel-collector/traces/"
+    topic_arn     = "arn:aws:sns:us-west-2:123456789012:your-existing-topic"
+    events        = ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+    filter_prefix = "mcd/otel-collector/"
   }
 }
 ```
 
 ## Usage
+
+### Option 1: Let the module create the SNS topic (Recommended)
+
+1. Set the required variables in `terraform.tfvars`:
+
+```hcl
+existing_vpc_id            = "vpc-12345678"
+existing_subnet_ids        = ["subnet-12345678", "subnet-87654321"]
+telemetry_data_bucket_arn  = "arn:aws:s3:::my-telemetry-bucket"
+# telemetry_data_bucket_notification_sns_topic_arn is optional - omit it to let the module create everything
+```
+
+2. Run Terraform:
+
+```bash
+terraform init
+terraform plan
+terraform apply
+```
+
+### Option 2: Use an existing SNS topic
 
 1. Set the required variables in `terraform.tfvars`:
 
@@ -63,10 +94,12 @@ resource "aws_s3_bucket_notification" "telemetry_notifications" {
 existing_vpc_id                                 = "vpc-12345678"
 existing_subnet_ids                             = ["subnet-12345678", "subnet-87654321"]
 telemetry_data_bucket_arn                      = "arn:aws:s3:::my-telemetry-bucket"
-telemetry_data_bucket_notification_sns_topic_arn = "arn:aws:sns:us-west-2:123456789012:telemetry-notifications"
+telemetry_data_bucket_notification_sns_topic_arn = "arn:aws:sns:us-west-2:123456789012:your-existing-topic"
 ```
 
-2. Run Terraform:
+2. Configure S3 bucket notifications to publish to your SNS topic (see Prerequisites section)
+
+3. Run Terraform:
 
 ```bash
 terraform init
@@ -81,10 +114,10 @@ terraform apply
 - `existing_vpc_id`: Your VPC ID where the collector will be deployed
 - `existing_subnet_ids`: List of at least 2 private subnet IDs
 - `telemetry_data_bucket_arn`: ARN of your S3 bucket for storing telemetry data
-- `telemetry_data_bucket_notification_sns_topic_arn`: ARN of the SNS topic that publishes notifications when new data is written to S3
 
 ### Optional Variables
 
+- `telemetry_data_bucket_notification_sns_topic_arn`: (Optional) ARN of an existing SNS topic. If not provided, the module will create a new SNS topic and configure S3 bucket notifications automatically
 - `deployment_name`: (Optional) Name for the deployment (default: "example-otel-collector-athena")
 - `task_desired_count`: (Optional) Number of tasks to run (default: 2)
 - `task_cpu`: (Optional) CPU units for each task (default: 1024)
@@ -104,6 +137,7 @@ terraform apply
 ### Athena/Glue Resources Outputs
 
 - `athena_glue_classifier_name`: Name of the Glue classifier
+- `athena_sns_topic_arn`: ARN of the SNS topic used (either provided or created)
 - `athena_sqs_queue_arn`: ARN of the SQS queue that triggers the crawler
 - `athena_sqs_queue_url`: URL of the SQS queue
 - `athena_glue_crawler_role_arn`: ARN of the IAM role used by the Glue crawler
@@ -131,7 +165,9 @@ Note: Table names will depend on your S3 folder structure. The crawler creates t
 
 1. **Data Collection**: The OpenTelemetry Collector receives telemetry data and writes it to S3 under `mcd/otel-collector/traces/`
 
-2. **Event Notification**: When new objects are created in S3, an event notification is published to the SNS topic
+2. **Event Notification**: When new objects are created in S3:
+   - If using module-created SNS topic: S3 automatically publishes to the SNS topic (configured by the module)
+   - If using existing SNS topic: S3 publishes to your configured SNS topic
 
 3. **Queue Processing**: The SNS topic forwards the notification to the SQS queue
 
@@ -145,10 +181,12 @@ Note: Table names will depend on your S3 folder structure. The crawler creates t
 
 ### Crawler Not Triggering
 
-- Verify S3 event notifications are configured correctly
-- Check that the SNS topic is publishing to the SQS queue
+- If using an existing SNS topic: Verify S3 event notifications are configured correctly to publish to your SNS topic
+- If using module-created SNS topic: Verify the S3 bucket notification resource was created successfully
+- Check that the SNS topic is publishing to the SQS queue (verify subscription exists)
 - Verify the SQS queue policy allows SNS to send messages
 - Check CloudWatch Logs for the Glue crawler for errors
+- Verify messages are arriving in the SQS queue
 
 ### Tables Not Appearing
 

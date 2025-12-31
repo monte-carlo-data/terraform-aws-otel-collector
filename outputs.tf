@@ -59,3 +59,8 @@ output "athena_glue_database_name" {
   description = "The name of the Glue catalog database"
   value       = var.deploy_athena_resources ? module.athena_resources[0].glue_database_name : null
 }
+
+output "athena_sns_topic_arn" {
+  description = "The ARN of the SNS topic used for notifications (either provided or created)"
+  value       = var.deploy_athena_resources ? module.athena_resources[0].sns_topic_arn : null
+}

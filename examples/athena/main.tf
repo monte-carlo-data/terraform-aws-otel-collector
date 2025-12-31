@@ -22,10 +22,10 @@ module "otel_collector" {
   telemetry_data_bucket_arn  = var.telemetry_data_bucket_arn
   existing_security_group_id = var.existing_security_group_id
 
-  # Enable Athena resources (Glue classifier, SQS queue, IAM role, and Glue crawler)
+  # Enable Athena resources (Glue classifier, SNS topic, SQS queue, IAM role, and Glue crawler)
   deploy_athena_resources = true
 
-  # SNS topic ARN for triggering the Glue crawler when new data arrives
+  # Optional: Provide an existing SNS topic ARN. If omitted (empty string), the module will create one automatically
   telemetry_data_bucket_notification_sns_topic_arn = var.telemetry_data_bucket_notification_sns_topic_arn
 
   # Optional customizations

@@ -11,8 +11,9 @@ variable "common_tags" {
 }
 
 variable "sns_topic_arn" {
-  description = "ARN of the SNS topic to subscribe the SQS queue to"
+  description = "Optional ARN of the SNS topic to subscribe the SQS queue to. If not provided (empty string), a SNS topic will be created and S3 bucket notifications will be created to the new SNS topic."
   type        = string
+  default     = ""
 }
 
 variable "telemetry_data_bucket_arn" {

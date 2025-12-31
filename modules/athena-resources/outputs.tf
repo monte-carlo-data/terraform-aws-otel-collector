@@ -35,3 +35,8 @@ output "glue_database_name" {
   value       = aws_glue_catalog_database.telemetry_database.name
 }
 
+output "sns_topic_arn" {
+  description = "The ARN of the SNS topic used for notifications (either provided or created)"
+  value       = local.sns_topic_arn
+}
+

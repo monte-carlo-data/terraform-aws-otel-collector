@@ -26,8 +26,9 @@ variable "telemetry_data_bucket_arn" {
 }
 
 variable "telemetry_data_bucket_notification_sns_topic_arn" {
-  description = "ARN of the SNS topic that will publish notifications when new data is written to the telemetry S3 bucket. This triggers the Glue crawler to process new data."
+  description = "ARN of an existing SNS topic that will publish notifications when new data is written to the telemetry S3 bucket. If not provided, the module will create a new SNS topic and configure S3 bucket notifications automatically."
   type        = string
+  default     = ""
 }
 
 variable "existing_security_group_id" {

@@ -29,6 +29,11 @@ output "athena_glue_classifier_name" {
   value       = module.otel_collector.athena_glue_classifier_name
 }
 
+output "athena_sns_topic_arn" {
+  description = "The ARN of the SNS topic used for notifications (either provided or created by the module)"
+  value       = module.otel_collector.athena_sns_topic_arn
+}
+
 output "athena_sqs_queue_arn" {
   description = "The ARN of the SQS queue that receives notifications from SNS and triggers the Glue crawler"
   value       = module.otel_collector.athena_sqs_queue_arn
