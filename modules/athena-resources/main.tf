@@ -29,6 +29,32 @@ resource "aws_sns_topic" "telemetry_notifications" {
   tags = var.common_tags
 }
 
+# SNS Topic Policy to allow S3 to publish (only if SNS topic was created)
+resource "aws_sns_topic_policy" "telemetry_notifications_policy" {
+  count = local.use_existing_sns ? 0 : 1
+
+  arn = aws_sns_topic.telemetry_notifications[0].arn
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "s3.amazonaws.com"
+        }
+        Action   = "SNS:Publish"
+        Resource = aws_sns_topic.telemetry_notifications[0].arn
+        Condition = {
+          ArnLike = {
+            "aws:SourceArn" = var.telemetry_data_bucket_arn
+          }
+        }
+      }
+    ]
+  })
+}
+
 # SQS Queue
 resource "aws_sqs_queue" "crawler_queue" {
   name                      = "${var.deployment_name}-glue-crawler-queue"
@@ -82,7 +108,10 @@ resource "aws_s3_bucket_notification" "storage_notification_sns" {
     filter_prefix = "mcd/otel-collector/"
   }
 
-  depends_on = [aws_sns_topic.telemetry_notifications]
+  depends_on = [
+    aws_sns_topic.telemetry_notifications,
+    aws_sns_topic_policy.telemetry_notifications_policy
+  ]
 }
 
 # IAM Role for Glue Crawler
@@ -187,8 +216,22 @@ resource "aws_glue_crawler" "telemetry_crawler" {
   }
 
   recrawl_policy {
-    recrawl_behavior = "CRAWL_EVERYTHING"
+    recrawl_behavior = "CRAWL_EVENT_MODE"
   }
+
+  table_prefix = "traces"
+
+  configuration = jsonencode({
+    Version = 1.0
+    CrawlerOutput = {
+      Tables = {
+        AddOrUpdateBehavior = "MergeNewColumns"
+      }
+    }
+    Grouping = {
+      TableGroupingPolicy = "CombineCompatibleSchemas"
+    }
+  })
 
   tags = var.common_tags
 }
