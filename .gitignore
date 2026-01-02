@@ -56,9 +56,4 @@ var/
 .installed.cfg
 *.egg
 
-# Serverless directories
-.serverless
-
-node_modules/
-
 .terraform.lock.hcl
