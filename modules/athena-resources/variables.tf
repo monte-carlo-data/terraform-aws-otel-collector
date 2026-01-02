@@ -21,3 +21,22 @@ variable "telemetry_data_bucket_arn" {
   type        = string
 }
 
+variable "lambda_udf_image_uri" {
+  description = "Full Docker image URI for the Lambda UDF function"
+  type        = string
+  default     = "404798114945.dkr.ecr.us-east-1.amazonaws.com/otel-aws-athena-lambda-udf:latest"
+}
+
+variable "lambda_udf_timeout" {
+  description = "Timeout in seconds for the Lambda UDF function"
+  type        = number
+  default     = 300
+}
+
+variable "lambda_udf_memory_size" {
+  description = "Memory size in MB for the Lambda UDF function"
+  type        = number
+  default     = 1024
+}
+
+

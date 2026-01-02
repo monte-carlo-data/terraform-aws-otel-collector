@@ -40,3 +40,18 @@ output "sns_topic_arn" {
   value       = local.sns_topic_arn
 }
 
+output "lambda_udf_function_arn" {
+  description = "The ARN of the Lambda UDF function"
+  value       = aws_lambda_function.athena_udf.arn
+}
+
+output "lambda_udf_function_name" {
+  description = "The name of the Lambda UDF function"
+  value       = aws_lambda_function.athena_udf.function_name
+}
+
+output "lambda_udf_role_arn" {
+  description = "The ARN of the IAM role for the Lambda UDF function"
+  value       = aws_iam_role.lambda_udf_role.arn
+}
+
