@@ -162,28 +162,14 @@ variable "external_access_role_name" {
   default     = "N/A"
 }
 
-variable "deploy_redshift_resources" {
-  description = "Whether to deploy the Lambda UDF for Redshift to invoke Bedrock models and IAM Role for Redshift External Function"
+variable "deploy_athena_resources" {
+  description = "Whether to deploy AWS Glue resources for Athena (Glue classifier, SQS queue, IAM role, and Glue crawler)"
   type        = bool
   default     = false
 }
 
-variable "redshift_lambda_timeout" {
-  description = "Timeout for the Redshift Lambda UDF function in seconds (default: 600, max: 900)"
-  type        = number
-  default     = 600
-  validation {
-    condition     = var.redshift_lambda_timeout >= 1 && var.redshift_lambda_timeout <= 900
-    error_message = "Lambda timeout must be between 1 and 900 seconds (15 minutes)."
-  }
-}
-
-variable "redshift_lambda_memory_size" {
-  description = "Memory size for the Redshift Lambda UDF function in MB (default: 512, must be multiple of 64)"
-  type        = number
-  default     = 512
-  validation {
-    condition     = var.redshift_lambda_memory_size >= 128 && var.redshift_lambda_memory_size <= 10240 && var.redshift_lambda_memory_size % 64 == 0
-    error_message = "Lambda memory size must be between 128 and 10240 MB, and must be a multiple of 64."
-  }
+variable "telemetry_data_bucket_notification_sns_topic_arn" {
+  description = "Optional ARN of the SNS topic to subscribe the SQS queue to for triggering the Glue crawler. If not provided, a SNS topic will be created and S3 bucket notifications will be created to the new SNS topic."
+  type        = string
+  default     = ""
 }

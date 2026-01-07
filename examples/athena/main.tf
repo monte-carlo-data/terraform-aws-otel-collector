@@ -22,16 +22,15 @@ module "otel_collector" {
   telemetry_data_bucket_arn  = var.telemetry_data_bucket_arn
   existing_security_group_id = var.existing_security_group_id
 
+  # Enable Athena resources (Glue classifier, SNS topic, SQS queue, IAM role, and Glue crawler)
+  deploy_athena_resources = true
+
+  # Optional: Provide an existing SNS topic ARN. If omitted (empty string), the module will create one automatically
+  telemetry_data_bucket_notification_sns_topic_arn = var.telemetry_data_bucket_notification_sns_topic_arn
+
   # Optional customizations
   task_desired_count = var.task_desired_count
   task_cpu           = var.task_cpu
   task_memory        = var.task_memory
-
-  # Enable Redshift Lambda UDF and IAM Role for Redshift External Function
-  deploy_redshift_resources = true
-
-  # Optional Redshift Lambda UDF customizations
-  redshift_lambda_timeout     = var.redshift_lambda_timeout != null ? var.redshift_lambda_timeout : 600
-  redshift_lambda_memory_size = var.redshift_lambda_memory_size != null ? var.redshift_lambda_memory_size : 512
 }
 

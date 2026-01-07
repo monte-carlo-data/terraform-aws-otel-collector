@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "deployment_name" {
   description = "Name of the deployment (used for naming resources)"
   type        = string
-  default     = "example-otel-collector-redshift"
+  default     = "example-otel-collector-athena"
 }
 
 variable "existing_vpc_id" {
@@ -23,6 +23,12 @@ variable "existing_subnet_ids" {
 variable "telemetry_data_bucket_arn" {
   description = "ARN of the S3 bucket to store OpenTelemetry data"
   type        = string
+}
+
+variable "telemetry_data_bucket_notification_sns_topic_arn" {
+  description = "ARN of an existing SNS topic that will publish notifications when new data is written to the telemetry S3 bucket. If not provided, the module will create a new SNS topic and configure S3 bucket notifications automatically."
+  type        = string
+  default     = ""
 }
 
 variable "existing_security_group_id" {
@@ -47,17 +53,5 @@ variable "task_memory" {
   description = "Memory for the task in MB"
   type        = number
   default     = 2048
-}
-
-variable "redshift_lambda_timeout" {
-  description = "Timeout for the Redshift Lambda UDF function in seconds (default: 600, max: 900)"
-  type        = number
-  default     = null
-}
-
-variable "redshift_lambda_memory_size" {
-  description = "Memory size for the Redshift Lambda UDF function in MB (default: 512, must be multiple of 64)"
-  type        = number
-  default     = null
 }
 
