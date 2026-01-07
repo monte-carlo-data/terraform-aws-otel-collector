@@ -21,10 +21,10 @@ jobs:
     parameters:
       deployment:
         type: string
-        default: "prod-us1"
+        default: "dev-us1"
       env_type:
         type: string
-        default: "prod"
+        default: "dev"
     docker:
       - image: cimg/python:3.11
     steps:
@@ -62,5 +62,6 @@ workflows:
           filters:
             branches:
               only:
+                - ghynson/olym-7013-create-terraform-to-configure-agent-obs-for-athena-2
                 - main
                 - /^v\d+\.\d+\.\d+.*/
