@@ -29,6 +29,7 @@ jobs:
       - image: cimg/python:3.11
     steps:
       - checkout
+      - setup_remote_docker
       - mcd-tools/assume-deployment-role:
           deployment: << parameters.deployment >>
           env: << parameters.env_type >>
