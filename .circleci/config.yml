@@ -32,8 +32,6 @@ jobs:
       - mcd-tools/assume-deployment-role:
           deployment: << parameters.deployment >>
           env: << parameters.env_type >>
-          profile_name: << parameters.env_type >>
-          set_aws_env_vars: false
       - mcd-tools/get-ssm-value:
           ssm_path: /saas/data/ecr/repository/aws_athena_lambda_udf/uri
           aws_profile: << parameters.env_type >>
