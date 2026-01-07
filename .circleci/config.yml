@@ -46,6 +46,7 @@ jobs:
           repo: ${ECR_REPOSITORY}
           tag: latest,${IMAGE_TAG}
           checkout: false
+          path: ./modules/athena-resources/lambda-udf
 
 workflows:
   version: 2
