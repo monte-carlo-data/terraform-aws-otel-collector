@@ -35,7 +35,7 @@ jobs:
           profile_name: << parameters.env_type >>
           set_aws_env_vars: false
       - mcd-tools/get-ssm-value:
-          ssm_path: /saas/otel/ecr/repository/otel-aws-athena-lambda-udf
+          ssm_path: /saas/data/ecr/repository/aws_athena_lambda_udf/uri
           aws_profile: << parameters.env_type >>
           result_env_name: ECR_REPOSITORY
       - run:
