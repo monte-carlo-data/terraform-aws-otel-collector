@@ -27,6 +27,7 @@ jobs:
         default: "dev"
     docker:
       - image: cimg/python:3.11
+    working_directory: ./modules/athena-resources/lambda-udf
     steps:
       - checkout
       - setup_remote_docker
@@ -45,7 +46,6 @@ jobs:
           repo: ${ECR_REPOSITORY}
           tag: latest,${IMAGE_TAG}
           checkout: false
-          path: ./modules/athena-resources/lambda-udf
 
 workflows:
   version: 2
