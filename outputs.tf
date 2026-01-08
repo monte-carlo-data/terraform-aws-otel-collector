@@ -64,3 +64,18 @@ output "athena_sns_topic_arn" {
   description = "The ARN of the SNS topic used for notifications (either provided or created)"
   value       = var.deploy_athena_resources ? module.athena_resources[0].sns_topic_arn : null
 }
+
+output "athena_lambda_udf_function_arn" {
+  description = "The ARN of the Lambda UDF function for Athena"
+  value       = var.deploy_athena_resources ? module.athena_resources[0].lambda_udf_function_arn : null
+}
+
+output "athena_lambda_udf_function_name" {
+  description = "The name of the Lambda UDF function for Athena"
+  value       = var.deploy_athena_resources ? module.athena_resources[0].lambda_udf_function_name : null
+}
+
+output "athena_lambda_udf_role_arn" {
+  description = "The ARN of the IAM role for the Lambda UDF function"
+  value       = var.deploy_athena_resources ? module.athena_resources[0].lambda_udf_role_arn : null
+}

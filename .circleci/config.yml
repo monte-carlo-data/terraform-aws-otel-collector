@@ -1,5 +1,9 @@
 version: 2.1
 
+orbs:
+  mcd-tools: monte-carlo/mcd-ci-tools@1.7.0
+  aws-ecr: circleci/aws-ecr@8.2.1
+
 jobs:
   run-sanity-check:
     docker:
@@ -13,9 +17,51 @@ jobs:
           name: Format and validate
           command: make sanity-check
 
+  build-and-push-lambda-udf:
+    parameters:
+      deployment:
+        type: string
+        default: "prod-us1"
+      env_type:
+        type: string
+        default: "prod"
+    docker:
+      - image: cimg/python:3.11
+    steps:
+      - checkout
+      - setup_remote_docker
+      - mcd-tools/assume-deployment-role:
+          deployment: << parameters.deployment >>
+          env: << parameters.env_type >>
+      - mcd-tools/get-ssm-value:
+          ssm_path: /saas/data/ecr/repository/aws_athena_lambda_udf/name
+          result_env_name: ECR_REPOSITORY
+      - run:
+          name: Set image tag
+          command: |
+            IMAGE_TAG=${CIRCLE_SHA1:0:7}
+            echo "export IMAGE_TAG=$IMAGE_TAG" >> $BASH_ENV
+      - aws-ecr/build-and-push-image:
+          repo: ${ECR_REPOSITORY}
+          tag: latest,${IMAGE_TAG}
+          checkout: false
+          path: ./modules/athena-resources/lambda-udf
+          build-path: ./modules/athena-resources/lambda-udf
+
 workflows:
   version: 2
 
   validate:
     jobs:
       - run-sanity-check
+
+  build-lambda-udf:
+    jobs:
+      - build-and-push-lambda-udf:
+          context:
+            - aws-prod
+          filters:
+            branches:
+              only:
+                - main
+                - /^v\d+\.\d+\.\d+.*/

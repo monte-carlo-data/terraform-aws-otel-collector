@@ -236,4 +236,72 @@ resource "aws_glue_crawler" "telemetry_crawler" {
   tags = var.common_tags
 }
 
+# Lambda UDF Resources
+# IAM Role for Lambda UDF
+resource "aws_iam_role" "lambda_udf_role" {
+  name = "${var.deployment_name}-lambda-udf-role"
+  path = "/"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+
+  tags = var.common_tags
+}
+
+# Attach AWS managed policy for Lambda basic execution
+resource "aws_iam_role_policy_attachment" "lambda_udf_basic_execution" {
+  role       = aws_iam_role.lambda_udf_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+# IAM Policy for Bedrock access
+resource "aws_iam_role_policy" "lambda_udf_bedrock_policy" {
+  name = "${var.deployment_name}-lambda-udf-bedrock-policy"
+  role = aws_iam_role.lambda_udf_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowInvokeBedrock"
+        Effect = "Allow"
+        Action = [
+          "bedrock:InvokeModel",
+          "bedrock:InvokeModelWithResponseStream"
+        ]
+        Resource = [
+          "arn:aws:bedrock:*::foundation-model/anthropic.claude-*"
+        ]
+      }
+    ]
+  })
+}
+
+# Lambda Function for Athena UDF
+resource "aws_lambda_function" "athena_udf" {
+  # The function name must not be changed.
+  function_name = "mcd-agent-observability-bedrock-udf"
+  role          = aws_iam_role.lambda_udf_role.arn
+  package_type  = "Image"
+  image_uri     = var.lambda_udf_image_uri
+
+  timeout     = var.lambda_udf_timeout
+  memory_size = var.lambda_udf_memory_size
+
+  image_config {
+    command = ["handler.lambda_handler"]
+  }
+
+  tags = var.common_tags
+}
 
