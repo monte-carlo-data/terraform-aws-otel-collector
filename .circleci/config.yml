@@ -34,7 +34,7 @@ jobs:
           deployment: << parameters.deployment >>
           env: << parameters.env_type >>
       - mcd-tools/get-ssm-value:
-          ssm_path: /saas/data/ecr/repository/aws_athena_lambda_udf/uri
+          ssm_path: /saas/data/ecr/repository/aws_athena_lambda_udf/name
           result_env_name: ECR_REPOSITORY
       - run:
           name: Set image tag
