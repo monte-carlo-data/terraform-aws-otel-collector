@@ -21,10 +21,10 @@ jobs:
     parameters:
       deployment:
         type: string
-        default: "dev-us1"
+        default: "prod-us1"
       env_type:
         type: string
-        default: "dev"
+        default: "prod"
     docker:
       - image: cimg/python:3.11
     steps:
@@ -59,10 +59,9 @@ workflows:
     jobs:
       - build-and-push-lambda-udf:
           context:
-            - aws-dev
+            - aws-prod
           filters:
             branches:
               only:
-                - ghynson/olym-7013-create-terraform-to-configure-agent-obs-for-athena-2
                 - main
                 - /^v\d+\.\d+\.\d+.*/
