@@ -42,7 +42,6 @@ jobs:
             IMAGE_TAG=${CIRCLE_SHA1:0:7}
             echo "export IMAGE_TAG=$IMAGE_TAG" >> $BASH_ENV
       - aws-ecr/build-and-push-image:
-          dockerfile: modules/athena-resources/lambda-udf/Dockerfile
           repo: ${ECR_REPOSITORY}
           tag: latest,${IMAGE_TAG}
           checkout: false
