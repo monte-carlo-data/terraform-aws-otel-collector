@@ -289,7 +289,8 @@ resource "aws_iam_role_policy" "lambda_udf_bedrock_policy" {
 
 # Lambda Function for Athena UDF
 resource "aws_lambda_function" "athena_udf" {
-  function_name = "${var.deployment_name}-athena-udf"
+  # The function name must not be changed.
+  function_name = "mcd-agent-observability-bedrock-udf"
   role          = aws_iam_role.lambda_udf_role.arn
   package_type  = "Image"
   image_uri     = var.lambda_udf_image_uri
