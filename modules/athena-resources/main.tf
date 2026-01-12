@@ -234,6 +234,7 @@ resource "aws_glue_crawler" "telemetry_crawler" {
     recrawl_behavior = "CRAWL_EVENT_MODE"
   }
 
+  schedule = "cron(*/30 * * * ? *)"
 
   configuration = jsonencode({
     Version = 1.0
