@@ -83,6 +83,21 @@ resource "aws_sqs_queue_policy" "crawler_queue_policy" {
             "aws:SourceArn" = local.sns_topic_arn
           }
         }
+      },
+      {
+        Effect = "Allow"
+        Principal = {
+          AWS = aws_iam_role.glue_crawler_role.arn
+        }
+        Action = [
+          "sqs:DeleteMessage",
+          "sqs:GetQueueUrl",
+          "sqs:ReceiveMessage",
+          "sqs:GetQueueAttributes",
+          "sqs:SetQueueAttributes",
+          "sqs:PurgeQueue"
+        ]
+        Resource = aws_sqs_queue.crawler_queue.arn
       }
     ]
   })
