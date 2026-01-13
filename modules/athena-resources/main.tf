@@ -296,7 +296,8 @@ resource "aws_iam_role_policy" "lambda_udf_bedrock_policy" {
           "bedrock:InvokeModelWithResponseStream"
         ]
         Resource = [
-          "arn:aws:bedrock:*::foundation-model/anthropic.claude-*"
+          "arn:aws:bedrock:*::foundation-model/anthropic.claude-*",
+          "arn:aws:bedrock:*:*:inference-profile/*anthropic.claude-*"
         ]
       }
     ]
