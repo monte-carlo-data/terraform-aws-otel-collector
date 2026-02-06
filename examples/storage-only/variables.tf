@@ -10,11 +10,6 @@ variable "deployment_name" {
   default     = "example-otel-storage"
 }
 
-variable "telemetry_data_bucket_arn" {
-  description = "ARN of the S3 bucket to store OpenTelemetry data"
-  type        = string
-}
-
 variable "mcd_otel_collector_task_role_arn" {
   description = "ARN of the role that should be granted write access to the telemetry S3 bucket"
   type        = string

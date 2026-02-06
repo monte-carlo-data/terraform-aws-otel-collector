@@ -18,7 +18,6 @@ module "otel_collector" {
 
   deployment_name                  = var.deployment_name
   deploy_otel_collector            = false
-  telemetry_data_bucket_arn        = var.telemetry_data_bucket_arn
   mcd_otel_collector_task_role_arn = var.mcd_otel_collector_task_role_arn
   vpc_endpoint_id                  = var.vpc_endpoint_id
 }

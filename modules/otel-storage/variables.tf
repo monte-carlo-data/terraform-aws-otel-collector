@@ -6,6 +6,7 @@ variable "deployment_name" {
 variable "telemetry_data_bucket_arn" {
   description = "ARN of the S3 bucket to store OpenTelemetry data such as traces, metrics, and logs."
   type        = string
+  default     = ""
 }
 
 variable "external_id" {

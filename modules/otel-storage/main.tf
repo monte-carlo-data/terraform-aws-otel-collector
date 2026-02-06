@@ -7,7 +7,15 @@ locals {
   use_aws_principal                    = var.external_access_principal_type == "AWS"
   use_custom_external_access_role_name = var.external_access_role_name != "N/A"
   external_access_role_name            = local.use_custom_external_access_role_name ? var.external_access_role_name : "${var.deployment_name}-EAR"
-  external_s3_bucket_name              = split(":", var.telemetry_data_bucket_arn)[5]
+  telemetry_bucket_name                = var.telemetry_data_bucket_arn != "" ? split(":", var.telemetry_data_bucket_arn)[5] : "${var.deployment_name}-otel-storage"
+  telemetry_bucket_arn                 = var.telemetry_data_bucket_arn != "" ? var.telemetry_data_bucket_arn : aws_s3_bucket.telemetry[0].arn
+}
+
+resource "aws_s3_bucket" "telemetry" {
+  count  = var.telemetry_data_bucket_arn == "" ? 1 : 0
+  bucket = local.telemetry_bucket_name
+
+  tags = var.common_tags
 }
 
 resource "aws_iam_role" "external_access_role" {
@@ -56,8 +64,8 @@ resource "aws_iam_policy" "external_access_s3_read_only_policy" {
           "s3:GetObjectVersion"
         ]
         Resource = [
-          var.telemetry_data_bucket_arn,
-          "${var.telemetry_data_bucket_arn}/*"
+          local.telemetry_bucket_arn,
+          "${local.telemetry_bucket_arn}/*"
         ]
       }
     ]
@@ -70,6 +78,29 @@ resource "aws_iam_role_policy_attachment" "external_access_policy_attachment" {
 }
 
 data "aws_iam_policy_document" "collector_bucket_policy" {
+  statement {
+    sid    = "DenyActionsWithoutSSL"
+    effect = "Deny"
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    actions = ["*"]
+
+    resources = [
+      local.telemetry_bucket_arn,
+      "${local.telemetry_bucket_arn}/*"
+    ]
+
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
+  }
+
   statement {
     sid    = "AllowCollectorWrite"
     effect = "Allow"
@@ -86,8 +117,8 @@ data "aws_iam_policy_document" "collector_bucket_policy" {
     ]
 
     resources = [
-      var.telemetry_data_bucket_arn,
-      "${var.telemetry_data_bucket_arn}/mcd/otel-collector/*"
+      local.telemetry_bucket_arn,
+      "${local.telemetry_bucket_arn}/mcd/otel-collector/*"
     ]
 
     dynamic "condition" {
@@ -102,6 +133,6 @@ data "aws_iam_policy_document" "collector_bucket_policy" {
 }
 
 resource "aws_s3_bucket_policy" "collector_write_policy" {
-  bucket = local.external_s3_bucket_name
+  bucket = local.telemetry_bucket_name
   policy = data.aws_iam_policy_document.collector_bucket_policy.json
 }

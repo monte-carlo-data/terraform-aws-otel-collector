@@ -25,6 +25,11 @@ output "opentelemetry_collector_security_group_id" {
   value       = var.deploy_otel_collector ? module.otel_collector[0].security_group_id : null
 }
 
+output "telemetry_data_bucket_arn" {
+  description = "The ARN of the telemetry S3 bucket (created or provided)."
+  value       = module.otel_storage.telemetry_data_bucket_arn
+}
+
 output "athena_glue_classifier_name" {
   description = "The name of the Glue classifier for Athena"
   value       = var.deploy_athena_resources ? module.athena_resources[0].glue_classifier_name : null

@@ -34,6 +34,7 @@ variable "existing_subnet_ids" {
 variable "telemetry_data_bucket_arn" {
   description = "ARN of the S3 bucket to store OpenTelemetry data such as traces, metrics, and logs."
   type        = string
+  default     = ""
 }
 
 variable "existing_security_group_id" {

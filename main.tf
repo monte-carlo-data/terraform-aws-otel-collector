@@ -7,7 +7,9 @@ locals {
     Provider = "monte-carlo"
   }
 
-  collector_role_arn = var.deploy_otel_collector ? module.otel_collector[0].task_role_arn : var.mcd_otel_collector_task_role_arn
+  collector_role_arn    = var.deploy_otel_collector ? module.otel_collector[0].task_role_arn : var.mcd_otel_collector_task_role_arn
+  telemetry_bucket_name = var.telemetry_data_bucket_arn != "" ? split(":", var.telemetry_data_bucket_arn)[5] : "${var.deployment_name}-otel-collector"
+  telemetry_bucket_arn  = var.telemetry_data_bucket_arn != "" ? var.telemetry_data_bucket_arn : "arn:aws:s3:::${local.telemetry_bucket_name}"
 }
 
 module "otel_collector" {
@@ -17,7 +19,7 @@ module "otel_collector" {
   deployment_name            = var.deployment_name
   existing_vpc_id            = var.existing_vpc_id
   existing_subnet_ids        = var.existing_subnet_ids
-  telemetry_data_bucket_arn  = var.telemetry_data_bucket_arn
+  telemetry_data_bucket_arn  = local.telemetry_bucket_arn
   existing_security_group_id = var.existing_security_group_id
   grpc_port                  = var.grpc_port
   http_port                  = var.http_port
@@ -53,7 +55,7 @@ module "athena_resources" {
   deployment_name           = var.deployment_name
   common_tags               = local.common_tags
   sns_topic_arn             = var.telemetry_data_bucket_notification_sns_topic_arn
-  telemetry_data_bucket_arn = var.telemetry_data_bucket_arn
+  telemetry_data_bucket_arn = local.telemetry_bucket_arn
 }
 
 
