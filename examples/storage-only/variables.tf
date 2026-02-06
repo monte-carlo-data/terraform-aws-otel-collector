@@ -15,7 +15,7 @@ variable "telemetry_data_bucket_arn" {
   type        = string
 }
 
-variable "mcd_otel_collector_role_arn" {
+variable "mcd_otel_collector_task_role_arn" {
   description = "ARN of the role that should be granted write access to the telemetry S3 bucket"
   type        = string
 }

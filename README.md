@@ -43,7 +43,7 @@ module "otel_collector" {
   deployment_name              = "my-otel-storage"
   deploy_otel_collector        = false
   telemetry_data_bucket_arn    = "arn:aws:s3:::my-telemetry-bucket"
-  mcd_otel_collector_role_arn  = "arn:aws:iam::123456789012:role/my-collector-role"
+  mcd_otel_collector_task_role_arn  = "arn:aws:iam::123456789012:role/my-collector-role"
   vpc_endpoint_id              = "vpce-1234567890abcdef"
 }
 ```
@@ -134,7 +134,7 @@ If you cannot use `moved` blocks (older Terraform versions), you will need to pe
 | <a name="input_external_id"></a> [external\_id](#input\_external\_id) | External ID to access the S3 bucket. Update this value later after the stack is created. | `string` | `"N/A"` | no |
 | <a name="input_grpc_port"></a> [grpc\_port](#input\_grpc\_port) | Port for OTLP gRPC receiver | `number` | `4317` | no |
 | <a name="input_http_port"></a> [http\_port](#input\_http\_port) | Port for OTLP HTTP receiver | `number` | `4318` | no |
-| <a name="input_mcd_otel_collector_role_arn"></a> [mcd\_otel\_collector\_role\_arn](#input\_mcd\_otel\_collector\_role\_arn) | ARN of the role that should be granted write access to the telemetry S3 bucket. | `string` | `""` | no |
+| <a name="input_mcd_otel_collector_task_role_arn"></a> [mcd\_otel\_collector\_role\_arn](#input\_mcd\_otel\_collector\_role\_arn) | ARN of the role that should be granted write access to the telemetry S3 bucket. | `string` | `""` | no |
 | <a name="input_memory_limit_mib"></a> [memory\_limit\_mib](#input\_memory\_limit\_mib) | Memory limit for the collector in MiB | `number` | `1500` | no |
 | <a name="input_memory_spike_limit_mib"></a> [memory\_spike\_limit\_mib](#input\_memory\_spike\_limit\_mib) | Memory spike limit for the collector in MiB | `number` | `512` | no |
 | <a name="input_task_cpu"></a> [task\_cpu](#input\_task\_cpu) | CPU units for the task (1024 = 1 vCPU) | `number` | `1024` | no |

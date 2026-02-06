@@ -76,7 +76,7 @@ data "aws_iam_policy_document" "collector_bucket_policy" {
 
     principals {
       type        = "AWS"
-      identifiers = [var.mcd_otel_collector_role_arn]
+      identifiers = [var.mcd_otel_collector_task_role_arn]
     }
 
     actions = [

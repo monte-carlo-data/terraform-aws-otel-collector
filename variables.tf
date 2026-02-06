@@ -170,13 +170,13 @@ variable "external_access_role_name" {
   default     = "N/A"
 }
 
-variable "mcd_otel_collector_role_arn" {
+variable "mcd_otel_collector_task_role_arn" {
   description = "ARN of the role that should be granted write access to the telemetry S3 bucket."
   type        = string
   default     = ""
   validation {
-    condition     = var.deploy_otel_collector || (var.mcd_otel_collector_role_arn != null && var.mcd_otel_collector_role_arn != "")
-    error_message = "mcd_otel_collector_role_arn is required when deploy_otel_collector is false."
+    condition     = var.deploy_otel_collector || (var.mcd_otel_collector_task_role_arn != null && var.mcd_otel_collector_task_role_arn != "")
+    error_message = "mcd_otel_collector_task_role_arn is required when deploy_otel_collector is false."
   }
 }
 

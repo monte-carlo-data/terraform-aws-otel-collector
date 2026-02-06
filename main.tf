@@ -7,7 +7,7 @@ locals {
     Provider = "monte-carlo"
   }
 
-  collector_role_arn = var.deploy_otel_collector ? module.otel_collector[0].task_role_arn : var.mcd_otel_collector_role_arn
+  collector_role_arn = var.deploy_otel_collector ? module.otel_collector[0].task_role_arn : var.mcd_otel_collector_task_role_arn
 }
 
 module "otel_collector" {
@@ -35,15 +35,15 @@ module "otel_collector" {
 module "otel_storage" {
   source = "./modules/otel-storage"
 
-  deployment_name                = var.deployment_name
-  telemetry_data_bucket_arn      = var.telemetry_data_bucket_arn
-  external_id                    = var.external_id
-  external_access_principal      = var.external_access_principal
-  external_access_principal_type = var.external_access_principal_type
-  external_access_role_name      = var.external_access_role_name
-  mcd_otel_collector_role_arn    = local.collector_role_arn
-  vpc_endpoint_id                = var.vpc_endpoint_id
-  common_tags                    = local.common_tags
+  deployment_name                  = var.deployment_name
+  telemetry_data_bucket_arn        = var.telemetry_data_bucket_arn
+  external_id                      = var.external_id
+  external_access_principal        = var.external_access_principal
+  external_access_principal_type   = var.external_access_principal_type
+  external_access_role_name        = var.external_access_role_name
+  mcd_otel_collector_task_role_arn = local.collector_role_arn
+  vpc_endpoint_id                  = var.vpc_endpoint_id
+  common_tags                      = local.common_tags
 }
 
 module "athena_resources" {
