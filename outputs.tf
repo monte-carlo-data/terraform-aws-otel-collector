@@ -2,27 +2,27 @@
 
 output "opentelemetry_collector_grpc_endpoint" {
   description = "The gRPC endpoint for the OpenTelemetry Collector"
-  value       = "${aws_lb.network_load_balancer.dns_name}:${var.grpc_port}"
+  value       = var.deploy_otel_collector ? module.otel_collector[0].grpc_endpoint : null
 }
 
 output "opentelemetry_collector_http_endpoint" {
   description = "The HTTP endpoint for the OpenTelemetry Collector"
-  value       = "http://${aws_lb.network_load_balancer.dns_name}:${var.http_port}"
+  value       = var.deploy_otel_collector ? module.otel_collector[0].http_endpoint : null
 }
 
 output "opentelemetry_collector_external_access_role_arn" {
   description = "The ARN of the IAM role for external access to the OpenTelemetry S3 bucket"
-  value       = aws_iam_role.external_access_role.arn
+  value       = module.otel_storage.external_access_role_arn
 }
 
 output "opentelemetry_collector_external_access_role_name" {
   description = "The name of the IAM role for external access to the OpenTelemetry S3 bucket"
-  value       = aws_iam_role.external_access_role.name
+  value       = module.otel_storage.external_access_role_name
 }
 
 output "opentelemetry_collector_security_group_id" {
   description = "The ID of the security group for the OpenTelemetry Collector"
-  value       = aws_security_group.security_group.id
+  value       = var.deploy_otel_collector ? module.otel_collector[0].security_group_id : null
 }
 
 output "athena_glue_classifier_name" {

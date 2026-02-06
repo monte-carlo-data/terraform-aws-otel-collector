@@ -5,17 +5,18 @@ A Terraform module that deploys Monte Carlo's OpenTelemetry Collector Service on
 ## Architecture
 
 This module creates:
-- ECS Fargate cluster and service
-- Network Load Balancer with gRPC and HTTP listeners
-- Security groups and IAM roles
-- CloudWatch log group
+- ECS Fargate cluster and service (optional)
+- Network Load Balancer with gRPC and HTTP listeners (optional)
+- Security groups and IAM roles (optional)
+- CloudWatch log group (optional)
 - External access role for S3 bucket access
+- S3 bucket policy allowing collector writes
 
 ## Prerequisites
 
 - Terraform >= 1.9.0
 - AWS CLI configured with appropriate permissions
-- Existing VPC with at least 2 private subnets
+- Existing VPC with at least 2 private subnets (only if deploying the collector)
 - S3 bucket for storing telemetry data
 
 ## Usage
@@ -30,6 +31,20 @@ module "otel_collector" {
   existing_vpc_id           = "vpc-12345678"
   existing_subnet_ids       = ["subnet-12345678", "subnet-87654321"]
   telemetry_data_bucket_arn = "arn:aws:s3:::my-telemetry-bucket"
+}
+```
+
+### Storage-Only Example
+
+```hcl
+module "otel_collector" {
+  source = "monte-carlo-data/otel-collector/aws"
+
+  deployment_name              = "my-otel-storage"
+  deploy_otel_collector        = false
+  telemetry_data_bucket_arn    = "arn:aws:s3:::my-telemetry-bucket"
+  mcd_otel_collector_role_arn  = "arn:aws:iam::123456789012:role/my-collector-role"
+  vpc_endpoint_id              = "vpce-1234567890abcdef"
 }
 ```
 
@@ -57,6 +72,12 @@ module "otel_collector" {
   external_access_principal_type     = "AWS"
 }
 ```
+
+## Migration Notes
+
+This release refactors resources into submodules. To avoid resource recreation for existing users, the module includes `moved` blocks that map old resource addresses to their new module addresses. Run `terraform apply` as usual and Terraform will migrate state automatically.
+
+If you cannot use `moved` blocks (older Terraform versions), you will need to perform `terraform state mv` operations that mirror the mappings in `moved.tf`.
 
 ## Requirements
 
@@ -99,12 +120,13 @@ module "otel_collector" {
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_deployment_name"></a> [deployment\_name](#input\_deployment\_name) | Name of the deployment (used for naming resources) | `string` | n/a | yes |
-| <a name="input_existing_subnet_ids"></a> [existing\_subnet\_ids](#input\_existing\_subnet\_ids) | List of private subnet IDs (at least 2) for deploying the OpenTelemetry Collector. | `list(string)` | n/a | yes |
-| <a name="input_existing_vpc_id"></a> [existing\_vpc\_id](#input\_existing\_vpc\_id) | VPC ID to deploy the OpenTelemetry Collector into. | `string` | n/a | yes |
+| <a name="input_existing_subnet_ids"></a> [existing\_subnet\_ids](#input\_existing\_subnet\_ids) | List of private subnet IDs (at least 2) for deploying the OpenTelemetry Collector. | `list(string)` | `[]` | no |
+| <a name="input_existing_vpc_id"></a> [existing\_vpc\_id](#input\_existing\_vpc\_id) | VPC ID to deploy the OpenTelemetry Collector into. | `string` | `"N/A"` | no |
 | <a name="input_telemetry_data_bucket_arn"></a> [telemetry\_data\_bucket\_arn](#input\_telemetry\_data\_bucket\_arn) | ARN of the S3 bucket to store OpenTelemetry data such as traces, metrics, and logs. | `string` | n/a | yes |
 | <a name="input_batch_size"></a> [batch\_size](#input\_batch\_size) | Batch size for sending telemetry data | `number` | `1024` | no |
 | <a name="input_batch_timeout"></a> [batch\_timeout](#input\_batch\_timeout) | Timeout for batch processor in seconds | `string` | `"10s"` | no |
 | <a name="input_container_image"></a> [container\_image](#input\_container\_image) | OpenTelemetry Collector container image | `string` | `"otel/opentelemetry-collector-contrib:latest"` | no |
+| <a name="input_deploy_otel_collector"></a> [deploy\_otel\_collector](#input\_deploy\_otel\_collector) | Whether to deploy the OpenTelemetry Collector infrastructure (ECS, NLB, IAM, etc.) | `bool` | `true` | no |
 | <a name="input_existing_security_group_id"></a> [existing\_security\_group\_id](#input\_existing\_security\_group\_id) | Optional additional security group ID to attach to the OpenTelemetry Collector resources. | `string` | `"N/A"` | no |
 | <a name="input_external_access_principal"></a> [external\_access\_principal](#input\_external\_access\_principal) | Principal (AWS ARN/account ID or Federated identifier) allowed to assume the external access role. | `string` | `"N/A"` | no |
 | <a name="input_external_access_principal_type"></a> [external\_access\_principal\_type](#input\_external\_access\_principal\_type) | Type of principal for external access role | `string` | `"AWS"` | no |
@@ -112,20 +134,22 @@ module "otel_collector" {
 | <a name="input_external_id"></a> [external\_id](#input\_external\_id) | External ID to access the S3 bucket. Update this value later after the stack is created. | `string` | `"N/A"` | no |
 | <a name="input_grpc_port"></a> [grpc\_port](#input\_grpc\_port) | Port for OTLP gRPC receiver | `number` | `4317` | no |
 | <a name="input_http_port"></a> [http\_port](#input\_http\_port) | Port for OTLP HTTP receiver | `number` | `4318` | no |
+| <a name="input_mcd_otel_collector_role_arn"></a> [mcd\_otel\_collector\_role\_arn](#input\_mcd\_otel\_collector\_role\_arn) | ARN of the role that should be granted write access to the telemetry S3 bucket. | `string` | `""` | no |
 | <a name="input_memory_limit_mib"></a> [memory\_limit\_mib](#input\_memory\_limit\_mib) | Memory limit for the collector in MiB | `number` | `1500` | no |
 | <a name="input_memory_spike_limit_mib"></a> [memory\_spike\_limit\_mib](#input\_memory\_spike\_limit\_mib) | Memory spike limit for the collector in MiB | `number` | `512` | no |
 | <a name="input_task_cpu"></a> [task\_cpu](#input\_task\_cpu) | CPU units for the task (1024 = 1 vCPU) | `number` | `1024` | no |
 | <a name="input_task_desired_count"></a> [task\_desired\_count](#input\_task\_desired\_count) | Desired number of running tasks for the OpenTelemetry Collector service | `number` | `2` | no |
 | <a name="input_task_memory"></a> [task\_memory](#input\_task\_memory) | Memory for the task in MB | `number` | `2048` | no |
+| <a name="input_vpc_endpoint_id"></a> [vpc\_endpoint\_id](#input\_vpc\_endpoint\_id) | Optional VPC endpoint ID to restrict S3 writes to that endpoint. | `string` | `""` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
 | <a name="output_opentelemetry_collector_external_access_role_arn"></a> [opentelemetry\_collector\_external\_access\_role\_arn](#output\_opentelemetry\_collector\_external\_access\_role\_arn) | The ARN of the IAM role for external access to the OpenTelemetry S3 bucket |
-| <a name="output_opentelemetry_collector_grpc_endpoint"></a> [opentelemetry\_collector\_grpc\_endpoint](#output\_opentelemetry\_collector\_grpc\_endpoint) | The gRPC endpoint for the OpenTelemetry Collector |
-| <a name="output_opentelemetry_collector_http_endpoint"></a> [opentelemetry\_collector\_http\_endpoint](#output\_opentelemetry\_collector\_http\_endpoint) | The HTTP endpoint for the OpenTelemetry Collector |
-| <a name="output_opentelemetry_collector_security_group_id"></a> [opentelemetry\_collector\_security\_group\_id](#output\_opentelemetry\_collector\_security\_group\_id) | The ID of the security group for the OpenTelemetry Collector |
+| <a name="output_opentelemetry_collector_grpc_endpoint"></a> [opentelemetry\_collector\_grpc\_endpoint](#output\_opentelemetry\_collector\_grpc\_endpoint) | The gRPC endpoint for the OpenTelemetry Collector (null when `deploy_otel_collector` is false) |
+| <a name="output_opentelemetry_collector_http_endpoint"></a> [opentelemetry\_collector\_http\_endpoint](#output\_opentelemetry\_collector\_http\_endpoint) | The HTTP endpoint for the OpenTelemetry Collector (null when `deploy_otel_collector` is false) |
+| <a name="output_opentelemetry_collector_security_group_id"></a> [opentelemetry\_collector\_security\_group\_id](#output\_opentelemetry\_collector\_security\_group\_id) | The ID of the security group for the OpenTelemetry Collector (null when `deploy_otel_collector` is false) |
 
 ## Post-Deployment Configuration
 
