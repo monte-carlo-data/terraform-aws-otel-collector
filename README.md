@@ -40,7 +40,7 @@ module "otel_collector" {
 module "otel_collector" {
   source = "monte-carlo-data/otel-collector/aws"
 
-  deployment_name              = "my-otel-storage"
+  deployment_name              = "my-data-store"
   deploy_otel_collector        = false
   mcd_otel_collector_task_role_arn = "arn:aws:iam::123456789012:role/my-collector-role"
   vpc_endpoint_id              = "vpce-1234567890abcdef"

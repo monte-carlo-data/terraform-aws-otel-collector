@@ -7,7 +7,7 @@ locals {
   use_aws_principal                    = var.external_access_principal_type == "AWS"
   use_custom_external_access_role_name = var.external_access_role_name != "N/A"
   external_access_role_name            = local.use_custom_external_access_role_name ? var.external_access_role_name : "${var.deployment_name}-EAR"
-  telemetry_bucket_name                = var.telemetry_data_bucket_arn != "" ? split(":", var.telemetry_data_bucket_arn)[5] : "${var.deployment_name}-otel-storage"
+  telemetry_bucket_name                = var.telemetry_data_bucket_arn != "" ? split(":", var.telemetry_data_bucket_arn)[5] : "${var.deployment_name}-data-store"
   telemetry_bucket_arn                 = var.telemetry_data_bucket_arn != "" ? var.telemetry_data_bucket_arn : aws_s3_bucket.telemetry[0].arn
 }
 

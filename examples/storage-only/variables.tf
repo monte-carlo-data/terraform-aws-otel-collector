@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "deployment_name" {
   description = "Name of the deployment (used for naming resources)"
   type        = string
-  default     = "example-otel-storage"
+  default     = "example-data-store"
 }
 
 variable "mcd_otel_collector_task_role_arn" {

@@ -35,7 +35,7 @@ module "otel_collector" {
 }
 
 module "otel_storage" {
-  source = "./modules/otel-storage"
+  source = "./modules/data-store"
 
   deployment_name                  = var.deployment_name
   telemetry_data_bucket_arn        = var.telemetry_data_bucket_arn
