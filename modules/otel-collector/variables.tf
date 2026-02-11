@@ -1,22 +1,13 @@
-# Variables for Monte Carlo's OpenTelemetry Collector Service
-
 variable "deployment_name" {
   description = "Name of the deployment (used for naming resources)"
   type        = string
 }
 
-variable "deploy_otel_collector" {
-  description = "Whether to deploy the OpenTelemetry Collector infrastructure (ECS, NLB, IAM, etc.)"
-  type        = bool
-  default     = true
-}
-
 variable "existing_vpc_id" {
   description = "VPC ID to deploy the OpenTelemetry Collector into."
   type        = string
-  default     = "N/A"
   validation {
-    condition     = var.deploy_otel_collector ? can(regex("^(vpc[e]?-[0-9a-f]*)$", var.existing_vpc_id)) : true
+    condition     = can(regex("^(vpc[e]?-[0-9a-f]*)$", var.existing_vpc_id))
     error_message = "VPC ID must match pattern ^(vpc[e]?-[0-9a-f]*)$"
   }
 }
@@ -24,9 +15,8 @@ variable "existing_vpc_id" {
 variable "existing_subnet_ids" {
   description = "List of private subnet IDs (at least 2) for deploying the OpenTelemetry Collector."
   type        = list(string)
-  default     = []
   validation {
-    condition     = var.deploy_otel_collector ? length(var.existing_subnet_ids) >= 2 : true
+    condition     = length(var.existing_subnet_ids) >= 2
     error_message = "At least 2 subnet IDs must be provided."
   }
 }
@@ -34,7 +24,6 @@ variable "existing_subnet_ids" {
 variable "telemetry_data_bucket_arn" {
   description = "ARN of the S3 bucket to store OpenTelemetry data such as traces, metrics, and logs."
   type        = string
-  default     = ""
 }
 
 variable "existing_security_group_id" {
@@ -143,58 +132,8 @@ variable "memory_spike_limit_mib" {
   }
 }
 
-variable "external_id" {
-  description = "External ID to access the S3 bucket. Update this value later after the stack is created."
-  type        = string
-  default     = "N/A"
-}
-
-variable "external_access_principal" {
-  description = "Principal (AWS ARN/account ID or Federated identifier) allowed to assume the external access role."
-  type        = string
-  default     = "N/A"
-}
-
-variable "external_access_principal_type" {
-  description = "Type of principal for external access role"
-  type        = string
-  default     = "AWS"
-  validation {
-    condition     = contains(["AWS", "Federated"], var.external_access_principal_type)
-    error_message = "External access principal type must be either 'AWS' or 'Federated'."
-  }
-}
-
-variable "external_access_role_name" {
-  description = "Custom name of the external access role. If left empty, will use the default name."
-  type        = string
-  default     = "N/A"
-}
-
-variable "mcd_otel_collector_task_role_arn" {
-  description = "ARN of the role that should be granted write access to the telemetry S3 bucket."
-  type        = string
-  default     = ""
-  validation {
-    condition     = var.deploy_otel_collector || (var.mcd_otel_collector_task_role_arn != null && var.mcd_otel_collector_task_role_arn != "")
-    error_message = "mcd_otel_collector_task_role_arn is required when deploy_otel_collector is false."
-  }
-}
-
-variable "vpc_endpoint_id" {
-  description = "Optional VPC endpoint ID to restrict S3 writes to that endpoint."
-  type        = string
-  default     = ""
-}
-
-variable "deploy_athena_resources" {
-  description = "Whether to deploy AWS Glue resources for Athena (Glue classifier, SQS queue, IAM role, and Glue crawler)"
-  type        = bool
-  default     = false
-}
-
-variable "telemetry_data_bucket_notification_sns_topic_arn" {
-  description = "Optional ARN of the SNS topic to subscribe the SQS queue to for triggering the Glue crawler. If not provided, a SNS topic will be created and S3 bucket notifications will be created to the new SNS topic."
-  type        = string
-  default     = ""
+variable "common_tags" {
+  description = "Common tags to apply to all resources"
+  type        = map(string)
+  default     = {}
 }
