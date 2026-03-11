@@ -10,24 +10,19 @@ logger = logging.getLogger()
 logger.setLevel("INFO")
 
 BEDROCK_RUNTIME_CLIENT = boto3.client("bedrock-runtime")
-DEFAULT_MODEL_PARAMS = {
-    "maxTokens": 512,
-    "temperature": 0.7,
-    "topP": 0.9,
-}
 
 
 class BedrockClaudeUDF(BaseAthenaUDF):
     """
     Athena UDF that invokes Claude models via Bedrock Converse API.
-    
-    Function signature: invoke_bedrock_claude(model_id, prompt, model_params, tool_config)
+
+    Function signature: mcd_invoke_bedrock(model_id, prompt, model_params, tool_config)
     - model_id: VARCHAR - The Claude Bedrock model ID
     - prompt: VARCHAR - The formatted prompt text
-    - model_params: VARCHAR - Optional JSON string with model parameters (maxTokens, temperature, topP)
+    - model_params: VARCHAR - Optional JSON string with inference config (maxTokens, temperature, topP, etc.)
     - tool_config: VARCHAR - Optional JSON string with tool configuration
     """
-    
+
     @staticmethod
     def handle_athena_record(
         input_schema: Schema,
@@ -36,7 +31,7 @@ class BedrockClaudeUDF(BaseAthenaUDF):
     ) -> str:
         """
         Process a single record from Athena.
-        
+
         Args:
             input_schema: PyArrow schema for input data
             output_schema: PyArrow schema for output data
@@ -45,7 +40,7 @@ class BedrockClaudeUDF(BaseAthenaUDF):
                 - arguments[1]: prompt (str)
                 - arguments[2]: model_params (str, optional JSON string)
                 - arguments[3]: tool_config (str, optional JSON string)
-        
+
         Returns:
             JSON string containing the model response
         """
@@ -53,32 +48,32 @@ class BedrockClaudeUDF(BaseAthenaUDF):
             error_msg = f"Expected at least 2 arguments (model_id, prompt), got {len(arguments)}"
             logger.error(error_msg)
             return json.dumps({"error": error_msg})
-        
+
         model_id = str(arguments[0]) if arguments[0] is not None else None
         prompt = str(arguments[1]) if arguments[1] is not None else None
         model_params_raw = str(arguments[2]) if len(arguments) > 2 and arguments[2] is not None else None
         tool_config_raw = str(arguments[3]) if len(arguments) > 3 and arguments[3] is not None else None
-        
+
         if not model_id or not prompt:
             error_msg = "model_id and prompt are required"
             logger.error(error_msg)
             return json.dumps({"error": error_msg})
-        
+
         try:
             # Parse JSON strings if they were passed as strings
             model_params = json.loads(model_params_raw) if model_params_raw else {}
             tool_config = json.loads(tool_config_raw) if tool_config_raw else {}
-            
+
             result = _invoke_bedrock(
                 model_id=model_id,
                 prompt=prompt,
                 model_params=model_params,
                 tool_config=tool_config
             )
-            
+
             # Return as JSON string (VARCHAR return type)
             return json.dumps(result)
-            
+
         except json.JSONDecodeError as e:
             error_msg = f"Failed to parse JSON parameters: {e}"
             logger.error(error_msg, exc_info=True)
@@ -97,19 +92,16 @@ def _invoke_bedrock(
 ) -> dict:
     """
     Invoke Claude model via Amazon Bedrock Converse API with the given prompt and parameters.
-    
+
     Args:
         model_id: The Claude Bedrock model ID (e.g., "anthropic.claude-3-sonnet-20240229-v1:0")
         prompt: The formatted prompt text
-        model_params: Optional model-specific parameters (maxTokens, temperature, topP)
+        model_params: Optional model-specific parameters (e.g. maxTokens, temperature, topP)
         tool_config: Optional tool configuration with 'tools' array and 'toolChoice'
-        
+
     Returns:
         Dictionary containing the model response
     """
-    if model_params is None:
-        model_params = {}
-    
     request_params = {
         "modelId": model_id,
         "messages": [
@@ -118,16 +110,14 @@ def _invoke_bedrock(
                 "content": [{"text": prompt}]
             }
         ],
-        "inferenceConfig": {
-            "maxTokens": model_params.get("maxTokens", DEFAULT_MODEL_PARAMS["maxTokens"]),
-            "temperature": model_params.get("temperature", DEFAULT_MODEL_PARAMS["temperature"]),
-            "topP": model_params.get("topP", DEFAULT_MODEL_PARAMS["topP"]),
-        }
     }
-    
+
+    if model_params:
+        request_params["inferenceConfig"] = model_params
+
     if tool_config:
         request_params["toolConfig"] = tool_config
-    
+
     response = BEDROCK_RUNTIME_CLIENT.converse(**request_params)
     return _extract_output(response)
 
@@ -140,12 +130,12 @@ def _extract_output(response: dict) -> dict:
     # The response structure is: response['output']['message']['content']
     output_message = response.get("output", {}).get("message", {})
     content = output_message.get("content", [])
-    
+
     # Extract text from content array (content is a list of content blocks)
     # When tools are used, content may contain toolUse blocks instead of text blocks
     output_text = ""
     tool_input = None
-    
+
     for block in content:
         if block.get("text"):
             output_text += block["text"]
@@ -156,11 +146,11 @@ def _extract_output(response: dict) -> dict:
             if tool_use.get("input"):
                 tool_input = tool_use.get("input")
                 break  # Use the first tool input found
-    
+
     # If a tool was used, return the tool input directly
     if tool_input:
         return tool_input
-    
+
     # Otherwise return text output
     return {"output_text": output_text}
 
