@@ -28,6 +28,15 @@ module "otel_collector" {
   # Optional: Provide an existing SNS topic ARN. If omitted (empty string), the module will create one automatically
   telemetry_data_bucket_notification_sns_topic_arn = var.telemetry_data_bucket_notification_sns_topic_arn
 
+  # Recommended: enable Athena partition projection on the traces table so multi-day
+  # queries stay fast as minute-grained partitions accumulate. List the service.name
+  # values your agents emit, e.g.:
+  #   enable_partition_projection = true
+  #   telemetry_service_names     = ["my-agent"]
+  enable_partition_projection = var.enable_partition_projection
+  telemetry_service_names     = var.telemetry_service_names
+  projection_year_range       = var.projection_year_range
+
   # Optional customizations
   task_desired_count = var.task_desired_count
   task_cpu           = var.task_cpu

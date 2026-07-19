@@ -55,3 +55,21 @@ variable "task_memory" {
   default     = 2048
 }
 
+variable "enable_partition_projection" {
+  description = "Declare the traces Glue table with Athena partition projection enabled (recommended). Requires telemetry_service_names."
+  type        = bool
+  default     = false
+}
+
+variable "telemetry_service_names" {
+  description = "OpenTelemetry service.name values your agents emit. Required when enable_partition_projection is true."
+  type        = list(string)
+  default     = []
+}
+
+variable "projection_year_range" {
+  description = "Inclusive year range for Athena partition projection, as \"min,max\"."
+  type        = string
+  default     = "2025,2032"
+}
+

@@ -72,6 +72,40 @@ module "otel_collector" {
 }
 ```
 
+### Athena Partition Projection (recommended with `deploy_athena_resources`)
+
+The collector writes telemetry as one S3 object per batch under minute-grained,
+Hive-style paths (`.../traces/<service.name>/year=YYYY/month=MM/day=DD/hour=HH/minute=MM/`),
+and the Glue crawler registers each minute as a catalog partition. As data accumulates,
+Athena's partition enumeration becomes the dominant cost of multi-day queries. Enabling
+[partition projection](https://docs.aws.amazon.com/athena/latest/ug/partition-projection.html)
+declares the `traces` table in Terraform with projection parameters so Athena computes
+partition locations instead of enumerating the catalog:
+
+```hcl
+module "otel_collector" {
+  source = "monte-carlo-data/otel-collector/aws"
+
+  # ... basic + athena configuration ...
+  deploy_athena_resources = true
+
+  enable_partition_projection = true
+  telemetry_service_names     = ["my-agent"] # the service.name values your agents emit
+  projection_year_range       = "2025,2032"  # keep tight; widen as needed
+}
+```
+
+Notes:
+
+- **Existing deployments:** the crawler has already created the `traces` table, so import it
+  before applying: `terraform import 'module.otel_collector.module.athena_resources[0].aws_glue_catalog_table.traces[0]' <account-id>:<deployment_name>-telemetry-db:traces`
+  (adjust the module path to your configuration). Applying without the import fails with
+  `AlreadyExistsException`.
+- Queries must keep filtering on the partition columns (`year`, `month`, ...) to benefit;
+  unfiltered full-table scans still enumerate the whole projected range.
+- The crawler keeps running for schema evolution; with projection enabled Athena no longer
+  reads the catalog partitions it registers.
+
 ## Migration Notes
 
 This release refactors resources into submodules. To avoid resource recreation for existing users, the module includes `moved` blocks that map old resource addresses to their new module addresses. Run `terraform apply` as usual and Terraform will migrate state automatically.
@@ -125,7 +159,9 @@ If you cannot use `moved` blocks (older Terraform versions), you will need to pe
 | <a name="input_batch_size"></a> [batch\_size](#input\_batch\_size) | Batch size for sending telemetry data | `number` | `1024` | no |
 | <a name="input_batch_timeout"></a> [batch\_timeout](#input\_batch\_timeout) | Timeout for batch processor in seconds | `string` | `"10s"` | no |
 | <a name="input_container_image"></a> [container\_image](#input\_container\_image) | OpenTelemetry Collector container image | `string` | `"otel/opentelemetry-collector-contrib:latest"` | no |
+| <a name="input_deploy_athena_resources"></a> [deploy\_athena\_resources](#input\_deploy\_athena\_resources) | Whether to deploy AWS Glue resources for Athena (Glue classifier, SQS queue, IAM role, and Glue crawler) | `bool` | `false` | no |
 | <a name="input_deploy_otel_collector"></a> [deploy\_otel\_collector](#input\_deploy\_otel\_collector) | Whether to deploy the OpenTelemetry Collector infrastructure (ECS, NLB, IAM, etc.) | `bool` | `true` | no |
+| <a name="input_enable_partition_projection"></a> [enable\_partition\_projection](#input\_enable\_partition\_projection) | Declare the traces Glue table with Athena partition projection enabled (recommended). Requires `telemetry_service_names`. Only relevant when `deploy_athena_resources` is true. | `bool` | `false` | no |
 | <a name="input_existing_security_group_id"></a> [existing\_security\_group\_id](#input\_existing\_security\_group\_id) | Optional additional security group ID to attach to the OpenTelemetry Collector resources. | `string` | `"N/A"` | no |
 | <a name="input_external_access_principal"></a> [external\_access\_principal](#input\_external\_access\_principal) | Principal (AWS ARN/account ID or Federated identifier) allowed to assume the external access role. | `string` | `"N/A"` | no |
 | <a name="input_external_access_principal_type"></a> [external\_access\_principal\_type](#input\_external\_access\_principal\_type) | Type of principal for external access role | `string` | `"AWS"` | no |
@@ -136,9 +172,12 @@ If you cannot use `moved` blocks (older Terraform versions), you will need to pe
 | <a name="input_mcd_otel_collector_task_role_arn"></a> [mcd\_otel\_collector\_task\_role\_arn](#input\_mcd\_otel\_collector\_task\_role\_arn) | ARN of the role that should be granted write access to the telemetry S3 bucket. | `string` | `""` | no |
 | <a name="input_memory_limit_mib"></a> [memory\_limit\_mib](#input\_memory\_limit\_mib) | Memory limit for the collector in MiB | `number` | `1500` | no |
 | <a name="input_memory_spike_limit_mib"></a> [memory\_spike\_limit\_mib](#input\_memory\_spike\_limit\_mib) | Memory spike limit for the collector in MiB | `number` | `512` | no |
+| <a name="input_projection_year_range"></a> [projection\_year\_range](#input\_projection\_year\_range) | Inclusive year range for Athena partition projection, as `"min,max"` (e.g. `"2025,2032"`). Keep the range tight. | `string` | `"2025,2032"` | no |
 | <a name="input_task_cpu"></a> [task\_cpu](#input\_task\_cpu) | CPU units for the task (1024 = 1 vCPU) | `number` | `1024` | no |
 | <a name="input_task_desired_count"></a> [task\_desired\_count](#input\_task\_desired\_count) | Desired number of running tasks for the OpenTelemetry Collector service | `number` | `2` | no |
 | <a name="input_task_memory"></a> [task\_memory](#input\_task\_memory) | Memory for the task in MB | `number` | `2048` | no |
+| <a name="input_telemetry_data_bucket_notification_sns_topic_arn"></a> [telemetry\_data\_bucket\_notification\_sns\_topic\_arn](#input\_telemetry\_data\_bucket\_notification\_sns\_topic\_arn) | Optional ARN of the SNS topic to subscribe the SQS queue to for triggering the Glue crawler. If not provided, a SNS topic will be created. | `string` | `""` | no |
+| <a name="input_telemetry_service_names"></a> [telemetry\_service\_names](#input\_telemetry\_service\_names) | OpenTelemetry `service.name` values your agents emit. Required when `enable_partition_projection` is true. | `list(string)` | `[]` | no |
 | <a name="input_vpc_endpoint_id"></a> [vpc\_endpoint\_id](#input\_vpc\_endpoint\_id) | Optional VPC endpoint ID to restrict S3 writes to that endpoint. | `string` | `""` | no |
 
 ## Outputs
