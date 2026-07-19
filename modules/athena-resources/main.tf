@@ -213,6 +213,113 @@ resource "aws_glue_catalog_database" "telemetry_database" {
   tags = var.common_tags
 }
 
+# Glue Table for traces (declared only when partition projection is enabled).
+#
+# Without this resource the crawler creates and owns the table, and Athena enumerates
+# every crawler-registered partition (one per minute of telemetry) when planning a
+# query — enumeration cost grows unboundedly with data age. Declaring the table lets
+# us attach Athena partition-projection parameters so partition locations are computed
+# from the ranges below instead. The crawler still runs against the same table: its
+# Tables.AddOrUpdateBehavior=MergeNewColumns update path only adds columns and never
+# removes table parameters, so projection settings and the crawler coexist.
+resource "aws_glue_catalog_table" "traces" {
+  count = var.enable_partition_projection ? 1 : 0
+
+  name          = "traces"
+  database_name = aws_glue_catalog_database.telemetry_database.name
+  table_type    = "EXTERNAL_TABLE"
+
+  parameters = {
+    classification = "traces"
+
+    "projection.enabled" = "true"
+    # The collector writes traces under a bare <service.name> path segment; the
+    # crawler surfaces it as the leading string partition column partition_0.
+    "projection.partition_0.type"   = "enum"
+    "projection.partition_0.values" = join(",", var.telemetry_service_names)
+    "projection.year.type"          = "integer"
+    "projection.year.range"         = var.projection_year_range
+    "projection.month.type"         = "integer"
+    "projection.month.range"        = "1,12"
+    "projection.month.digits"       = "2"
+    "projection.day.type"           = "integer"
+    "projection.day.range"          = "1,31"
+    "projection.day.digits"         = "2"
+    "projection.hour.type"          = "integer"
+    "projection.hour.range"         = "0,23"
+    "projection.hour.digits"        = "2"
+    "projection.minute.type"        = "integer"
+    "projection.minute.range"       = "0,59"
+    "projection.minute.digits"      = "2"
+    # $${...} renders literal ${...} — Athena substitutes these, not Terraform.
+    "storage.location.template" = "${local.s3_traces_path}$${partition_0}/year=$${year}/month=$${month}/day=$${day}/hour=$${hour}/minute=$${minute}"
+  }
+
+  storage_descriptor {
+    location      = local.s3_traces_path
+    input_format  = "org.apache.hadoop.mapred.TextInputFormat"
+    output_format = "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat"
+
+    ser_de_info {
+      serialization_library = "com.amazonaws.glue.serde.GrokSerDe"
+      parameters = {
+        "input.format" = local.grok_pattern
+      }
+    }
+
+    columns {
+      name = "value"
+      type = "string"
+    }
+  }
+
+  partition_keys {
+    name = "partition_0" # service.name path segment
+    type = "string"
+  }
+  partition_keys {
+    name = "year"
+    type = "string"
+  }
+  partition_keys {
+    name = "month"
+    type = "string"
+  }
+  partition_keys {
+    name = "day"
+    type = "string"
+  }
+  partition_keys {
+    name = "hour"
+    type = "string"
+  }
+  partition_keys {
+    name = "minute"
+    type = "string"
+  }
+
+  lifecycle {
+    # The crawler keeps updating table statistics on every run and may add columns
+    # via MergeNewColumns; don't fight it on plan. Projection parameters stay
+    # Terraform-managed.
+    ignore_changes = [
+      storage_descriptor[0].columns,
+      parameters["averageRecordSize"],
+      parameters["compressionType"],
+      parameters["CrawlerSchemaDeserializerVersion"],
+      parameters["CrawlerSchemaSerializerVersion"],
+      parameters["CRAWL_RUN_ID"],
+      parameters["grokPattern"],
+      parameters["objectCount"],
+      parameters["partition_filtering.enabled"],
+      parameters["recordCount"],
+      parameters["sizeKey"],
+      parameters["typeOfData"],
+      parameters["UPDATED_BY_CRAWLER"],
+    ]
+  }
+}
+
 # Glue Crawler
 resource "aws_glue_crawler" "telemetry_crawler" {
   name          = "${var.deployment_name}-telemetry-crawler"
@@ -239,6 +346,9 @@ resource "aws_glue_crawler" "telemetry_crawler" {
   configuration = jsonencode({
     Version = 1.0
     CrawlerOutput = {
+      Partitions = {
+        AddOrUpdateBehavior = "InheritFromTable"
+      }
       Tables = {
         AddOrUpdateBehavior = "MergeNewColumns",
         TableThreshold      = 1
@@ -250,6 +360,10 @@ resource "aws_glue_crawler" "telemetry_crawler" {
   })
 
   tags = var.common_tags
+
+  # When the traces table is declared (partition projection), it must exist before
+  # the first crawl so the crawler takes its update path instead of creating the table.
+  depends_on = [aws_glue_catalog_table.traces]
 }
 
 # Lambda UDF Resources

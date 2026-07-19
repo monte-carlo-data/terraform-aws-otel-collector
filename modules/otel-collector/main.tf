@@ -258,6 +258,10 @@ exporters:
       s3_bucket: ${local.external_s3_bucket_name}
       s3_base_prefix: mcd/otel-collector/traces
       file_prefix: traces
+      # Pin the exporter default: downstream Glue/Athena resources (partition
+      # projection) depend on this exact layout, so don't let it drift with
+      # collector upgrades.
+      s3_partition_format: 'year=%Y/month=%m/day=%d/hour=%H/minute=%M'
     resource_attrs_to_s3:
       s3_prefix: "service.name"
   awss3/metrics:
@@ -266,6 +270,7 @@ exporters:
       s3_bucket: ${local.external_s3_bucket_name}
       s3_base_prefix: mcd/otel-collector/metrics
       file_prefix: metrics
+      s3_partition_format: 'year=%Y/month=%m/day=%d/hour=%H/minute=%M'
     resource_attrs_to_s3:
       s3_prefix: "service.name"
   awss3/logs:
@@ -274,6 +279,7 @@ exporters:
       s3_bucket: ${local.external_s3_bucket_name}
       s3_base_prefix: mcd/otel-collector/logs
       file_prefix: logs
+      s3_partition_format: 'year=%Y/month=%m/day=%d/hour=%H/minute=%M'
     resource_attrs_to_s3:
       s3_prefix: "service.name"
 

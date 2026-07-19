@@ -198,3 +198,21 @@ variable "telemetry_data_bucket_notification_sns_topic_arn" {
   type        = string
   default     = ""
 }
+
+variable "enable_partition_projection" {
+  description = "Declare the traces Glue table with Athena partition projection enabled (recommended). Athena then computes partition locations from the projection ranges instead of enumerating the Glue catalog, keeping multi-day queries fast as minute-grained partitions accumulate. Requires telemetry_service_names. Only relevant when deploy_athena_resources is true."
+  type        = bool
+  default     = false
+}
+
+variable "telemetry_service_names" {
+  description = "OpenTelemetry service.name values your agents emit (the collector writes each service's traces under its own S3 path segment). Required when enable_partition_projection is true."
+  type        = list(string)
+  default     = []
+}
+
+variable "projection_year_range" {
+  description = "Inclusive year range for Athena partition projection, as \"min,max\" (e.g. \"2025,2032\"). Keep the range tight: every extra year adds ~526k virtual partitions to the unpruned enumeration space."
+  type        = string
+  default     = "2025,2032"
+}

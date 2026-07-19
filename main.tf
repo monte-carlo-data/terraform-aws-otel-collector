@@ -52,10 +52,13 @@ module "athena_resources" {
   source = "./modules/athena-resources"
   count  = var.deploy_athena_resources ? 1 : 0
 
-  deployment_name           = var.deployment_name
-  common_tags               = local.common_tags
-  sns_topic_arn             = var.telemetry_data_bucket_notification_sns_topic_arn
-  telemetry_data_bucket_arn = local.telemetry_bucket_arn
+  deployment_name             = var.deployment_name
+  common_tags                 = local.common_tags
+  sns_topic_arn               = var.telemetry_data_bucket_notification_sns_topic_arn
+  telemetry_data_bucket_arn   = local.telemetry_bucket_arn
+  enable_partition_projection = var.enable_partition_projection
+  telemetry_service_names     = var.telemetry_service_names
+  projection_year_range       = var.projection_year_range
 }
 
 

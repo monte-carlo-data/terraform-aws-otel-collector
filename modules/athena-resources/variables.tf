@@ -39,4 +39,32 @@ variable "lambda_udf_memory_size" {
   default     = 1024
 }
 
+variable "enable_partition_projection" {
+  description = "Declare the traces Glue table with Athena partition projection enabled. Athena then computes partition locations from the projection ranges instead of enumerating the Glue catalog, keeping multi-day queries fast as minute-grained partitions accumulate. Requires telemetry_service_names."
+  type        = bool
+  default     = false
+}
+
+variable "telemetry_service_names" {
+  description = "OpenTelemetry service.name values your agents emit (the collector writes each service's traces under its own S3 path segment). Used as the enum values for the service partition projection; required when enable_partition_projection is true."
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition     = !var.enable_partition_projection || length(var.telemetry_service_names) > 0
+    error_message = "telemetry_service_names must list at least one service.name value when enable_partition_projection is true."
+  }
+}
+
+variable "projection_year_range" {
+  description = "Inclusive year range for Athena partition projection, as \"min,max\" (e.g. \"2025,2032\"). Keep the range tight: every extra year adds ~526k virtual partitions to the unpruned enumeration space."
+  type        = string
+  default     = "2025,2032"
+
+  validation {
+    condition     = can(regex("^[0-9]{4},[0-9]{4}$", var.projection_year_range))
+    error_message = "projection_year_range must be two 4-digit years separated by a comma, e.g. \"2025,2032\"."
+  }
+}
+
 
