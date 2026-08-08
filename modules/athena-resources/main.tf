@@ -10,6 +10,8 @@ locals {
   sns_topic_arn    = local.use_existing_sns ? var.sns_topic_arn : aws_sns_topic.telemetry_notifications[0].arn
 }
 
+data "aws_caller_identity" "current" {}
+
 # Glue Classifier
 resource "aws_glue_classifier" "grok_classifier" {
   name = "${var.deployment_name}-grok-classifier"
@@ -322,3 +324,16 @@ resource "aws_lambda_function" "athena_udf" {
   tags = var.common_tags
 }
 
+# Allow any IAM principal in the same account to invoke the Lambda UDF.
+# Athena executes USING EXTERNAL FUNCTION calls using the caller's IAM credentials
+# (the Monte Carlo Athena integration role). Granting the account root here means
+# any same-account principal that Athena acts on behalf of can invoke the UDF
+# without requiring a separate identity-based lambda:InvokeFunction policy on each
+# individual role — matching the behaviour customers get from the aws-athena-configuration
+# IAM policy snippet in the MC docs.
+resource "aws_lambda_permission" "allow_same_account_invoke" {
+  statement_id  = "AllowSameAccountInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.athena_udf.function_name
+  principal     = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+}
