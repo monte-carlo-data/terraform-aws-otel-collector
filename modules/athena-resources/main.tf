@@ -324,16 +324,31 @@ resource "aws_lambda_function" "athena_udf" {
   tags = var.common_tags
 }
 
-# Allow any IAM principal in the same account to invoke the Lambda UDF.
-# Athena executes USING EXTERNAL FUNCTION calls using the caller's IAM credentials
-# (the Monte Carlo Athena integration role). Granting the account root here means
-# any same-account principal that Athena acts on behalf of can invoke the UDF
-# without requiring a separate identity-based lambda:InvokeFunction policy on each
-# individual role — matching the behaviour customers get from the aws-athena-configuration
-# IAM policy snippet in the MC docs.
-resource "aws_lambda_permission" "allow_same_account_invoke" {
-  statement_id  = "AllowSameAccountInvoke"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.athena_udf.function_name
-  principal     = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+# Grant each Athena execution role (e.g. the MC integration role) permission to
+# invoke the Lambda UDF via an identity-based policy.
+#
+# For same-account Lambda calls, AWS evaluates BOTH the resource-based policy and
+# the caller's identity-based policy. The account-root resource policy alone is not
+# sufficient — the calling IAM role must also have lambda:InvokeFunction in its own
+# identity policy (confirmed via Athena ErrorType 1500 in prod).
+#
+# Pass the MC Athena integration role name(s) via var.athena_execution_role_names
+# so the module wires the permission automatically.
+resource "aws_iam_role_policy" "athena_execution_role_udf_invoke" {
+  for_each = toset(var.athena_execution_role_names)
+
+  name = "${var.deployment_name}-bedrock-udf-invoke"
+  role = each.value
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid      = "AllowBedrockUDFInvoke"
+        Effect   = "Allow"
+        Action   = "lambda:InvokeFunction"
+        Resource = aws_lambda_function.athena_udf.arn
+      }
+    ]
+  })
 }
