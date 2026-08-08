@@ -11,7 +11,7 @@ variable "common_tags" {
 }
 
 variable "sns_topic_arn" {
-  description = "Optional ARN of the SNS topic to subscribe the SQS queue to. If not provided (empty string), a SNS topic will be created and S3 bucket notifications will be created to the new SNS topic."
+  description = "Optional ARN of the SNS topic to subscribe the SQQ queue to. If not provided (empty string), a SNS topic will be created and S3 bucket notifications will be created to the new SNS topic."
   type        = string
   default     = ""
 }
@@ -39,4 +39,8 @@ variable "lambda_udf_memory_size" {
   default     = 1024
 }
 
-
+variable "athena_execution_role_names" {
+  description = "Names of the IAM roles used to execute Athena queries (e.g. the MC integration role). Each role receives an inline policy granting lambda:InvokeFunction on the UDF. Required for Athena UDF invocation: for same-account Lambda calls AWS requires the caller identity-based policy to allow the action, even when a resource-based policy is present."
+  type        = list(string)
+  default     = []
+}
